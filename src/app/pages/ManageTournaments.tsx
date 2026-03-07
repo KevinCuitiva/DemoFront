@@ -66,7 +66,7 @@ const mockTournaments: Tournament[] = [
     maxTeams: 16,
     playersPerTeam: 11,
     schedules: ["8:00 AM - 10:00 AM", "10:00 AM - 12:00 PM", "2:00 PM - 4:00 PM"],
-    allowedDecanaturas: ["Ingeniería de Sistemas", "Ingeniería Industrial", "Ciencias Económicas"],
+    allowedDecanaturas: ["Ingeniería de Sistemas", "Ingeniería Industrial", "Administración de Empresas"],
     costPerTeam: 50000,
   },
   {
@@ -82,7 +82,7 @@ const mockTournaments: Tournament[] = [
     maxTeams: 12,
     playersPerTeam: 11,
     schedules: ["10:00 AM - 12:00 PM", "2:00 PM - 4:00 PM"],
-    allowedDecanaturas: ["Ingeniería de Sistemas", "Derecho"],
+    allowedDecanaturas: ["Ingeniería de Sistemas", "Ingeniería Civil"],
     costPerTeam: 45000,
   },
   {
@@ -104,16 +104,21 @@ const mockTournaments: Tournament[] = [
 ];
 
 const decanaturasOptions = [
+  "Ingeniería en Biotecnología",
+  "Ingeniería de Inteligencia Artificial",
+  "Ingeniería de Ciberseguridad",
+  "Ingeniería Civil",
+  "Ingeniería Ambiental",
+  "Ingeniería Estadística",
+  "Ingeniería Eléctrica",
   "Ingeniería de Sistemas",
   "Ingeniería Industrial",
-  "Ingeniería Civil",
   "Ingeniería Electrónica",
   "Ingeniería Mecánica",
-  "Ciencias Económicas",
-  "Ciencias de la Salud",
-  "Ciencias Sociales",
-  "Derecho",
-  "Arquitectura",
+  "Ingeniería Biomédica",
+  "Administración de Empresas",
+  "Matemáticas",
+  "Economía",
 ];
 
 const horariosOptions = [
@@ -165,6 +170,7 @@ export function ManageTournaments() {
 
   const handleLogout = () => {
     setShowLogout(false);
+    sessionStorage.removeItem("userContext");
     navigate("/login");
   };
 

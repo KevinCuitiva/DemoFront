@@ -1,13 +1,26 @@
 import { motion } from "motion/react";
 import { Link, useLocation } from "react-router";
-import { LayoutDashboard, Swords, Trophy, User, FolderKanban, PlusCircle } from "lucide-react";
+import { useEffect } from "react";
+import { LayoutDashboard, Swords, Trophy, User, FolderKanban, PlusCircle, CalendarDays } from "lucide-react";
 
 export function MobileNav() {
   const location = useLocation();
 
-  // Detectar el contexto: árbitro, admin o normal
-  const isArbitroContext = location.pathname.startsWith("/dashboard-arbitro");
-  const isAdminContext = location.pathname.startsWith("/dashboard-admin") || location.pathname.startsWith("/admin/");
+  // Detectar y guardar el contexto del usuario
+  useEffect(() => {
+    if (location.pathname.startsWith("/dashboard-arbitro")) {
+      sessionStorage.setItem("userContext", "arbitro");
+    } else if (location.pathname.startsWith("/dashboard-admin") || location.pathname.startsWith("/admin/")) {
+      sessionStorage.setItem("userContext", "admin");
+    } else if (location.pathname === "/dashboard") {
+      sessionStorage.setItem("userContext", "user");
+    }
+  }, [location.pathname]);
+
+  // Obtener el contexto guardado
+  const savedContext = sessionStorage.getItem("userContext");
+  const isArbitroContext = savedContext === "arbitro" || location.pathname.startsWith("/dashboard-arbitro");
+  const isAdminContext = savedContext === "admin" || location.pathname.startsWith("/dashboard-admin") || location.pathname.startsWith("/admin/");
   
   let dashboardPath = "/dashboard";
   if (isArbitroContext) dashboardPath = "/dashboard-arbitro";
@@ -19,6 +32,13 @@ export function MobileNav() {
         { path: dashboardPath, icon: LayoutDashboard, label: "Inicio" },
         { path: "/admin/tournaments", icon: FolderKanban, label: "Torneos" },
         { path: "/admin/create-tournament", icon: PlusCircle, label: "Crear" },
+        { path: "/profile", icon: User, label: "Perfil" },
+      ]
+    : isArbitroContext
+    ? [
+        { path: dashboardPath, icon: LayoutDashboard, label: "Inicio" },
+        { path: "/schedule", icon: CalendarDays, label: "Calendario" },
+        { path: "/scores", icon: Trophy, label: "Puntuación" },
         { path: "/profile", icon: User, label: "Perfil" },
       ]
     : [

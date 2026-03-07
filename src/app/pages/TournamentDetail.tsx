@@ -56,12 +56,12 @@ interface Match {
 
 // ── Mock data ─────────────────────────────────────
 const mockTeams: Team[] = [
-  { id: 1, name: "Los Tigres FC", decanatura: "Ingeniería", players: 7, status: "active" },
-  { id: 2, name: "Relámpagos", decanatura: "Medicina", players: 7, status: "active" },
-  { id: 3, name: "Dragones Rojos", decanatura: "Derecho", players: 7, status: "active" },
-  { id: 4, name: "Aguilas Doradas", decanatura: "Economía", players: 7, status: "active" },
-  { id: 5, name: "Titanes", decanatura: "Arquitectura", players: 7, status: "eliminated", eliminatedDate: "2026-03-05" },
-  { id: 6, name: "Leones FC", decanatura: "Ingeniería", players: 7, status: "eliminated", eliminatedDate: "2026-03-04" },
+  { id: 1, name: "Los Tigres FC", decanatura: "Ingeniería de Sistemas", players: 7, status: "active" },
+  { id: 2, name: "Relámpagos", decanatura: "Ingeniería Industrial", players: 7, status: "active" },
+  { id: 3, name: "Dragones Rojos", decanatura: "Ingeniería Civil", players: 7, status: "active" },
+  { id: 4, name: "Aguilas Doradas", decanatura: "Ingeniería Electrónica", players: 7, status: "active" },
+  { id: 5, name: "Titanes", decanatura: "Ingeniería Mecánica", players: 7, status: "eliminated", eliminatedDate: "2026-03-05" },
+  { id: 6, name: "Leones FC", decanatura: "Ingeniería Biomédica", players: 7, status: "eliminated", eliminatedDate: "2026-03-04" },
 ];
 
 const mockMatches: Match[] = [
@@ -120,6 +120,7 @@ export function TournamentDetail() {
 
   const handleLogout = () => {
     setShowLogout(false);
+    sessionStorage.removeItem("userContext");
     navigate("/login");
   };
 

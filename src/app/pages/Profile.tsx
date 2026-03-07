@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   ExternalLink,
@@ -74,6 +74,26 @@ export function Profile() {
     "Apasionado por la integración de análisis de datos en el entrenamiento deportivo. Entrenador part-time en TechCup Academy."
   );
 
+  // Detectar el contexto del usuario
+  const savedContext = sessionStorage.getItem("userContext");
+  const [userContext, setUserContext] = useState<string>(savedContext || "user");
+
+  useEffect(() => {
+    const context = sessionStorage.getItem("userContext");
+    if (context) {
+      setUserContext(context);
+    }
+  }, []);
+
+  // Determinar el dashboard de retorno y configuración de color
+  const dashboardPath = userContext === "admin" ? "/dashboard-admin" : userContext === "arbitro" ? "/dashboard-arbitro" : "/dashboard";
+  const badgeColor = userContext === "admin" ? P.success : userContext === "arbitro" ? P.secondary : P.primary;
+  const badgeLabel = userContext === "admin" ? "Administrador" : userContext === "arbitro" ? "Árbitro" : "Usuario";
+
+  const handleBack = () => {
+    navigate(dashboardPath);
+  };
+
   const tabs: { id: Tab; label: string; icon: typeof LayoutGrid }[] = [
     { id: "overview", label: "Resumen", icon: LayoutGrid },
     { id: "settings", label: "Ajustes", icon: Settings },
@@ -100,7 +120,7 @@ export function Profile() {
           <motion.div
             whileHover={{ scale: 1.05, x: -1 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer flex-shrink-0"
             style={{ backgroundColor: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
           >
@@ -109,9 +129,9 @@ export function Profile() {
           <span className="flex-1" style={{ fontWeight: 800, color: P.primary, fontSize: "1.05rem", letterSpacing: "-0.02em" }}>
             TECHCUP
           </span>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ backgroundColor: `${P.secondary}12` }}>
-            <User style={{ width: 14, height: 14, color: P.secondary }} />
-            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: P.secondary }}>Perfil</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ backgroundColor: `${badgeColor}12` }}>
+            <User style={{ width: 14, height: 14, color: badgeColor }} />
+            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: badgeColor }}>{badgeLabel}</span>
           </div>
         </div>
       </motion.header>

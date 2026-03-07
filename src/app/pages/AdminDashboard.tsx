@@ -98,6 +98,7 @@ export function AdminDashboard() {
 
   const handleLogout = () => {
     setShowLogout(false);
+    sessionStorage.removeItem("userContext");
     navigate("/login");
   };
 

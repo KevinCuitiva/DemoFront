@@ -26,16 +26,21 @@ const P = {
 };
 
 const decanaturasOptions = [
+  "Ingeniería en Biotecnología",
+  "Ingeniería de Inteligencia Artificial",
+  "Ingeniería de Ciberseguridad",
+  "Ingeniería Civil",
+  "Ingeniería Ambiental",
+  "Ingeniería Estadística",
+  "Ingeniería Eléctrica",
   "Ingeniería de Sistemas",
   "Ingeniería Industrial",
-  "Ingeniería Civil",
   "Ingeniería Electrónica",
   "Ingeniería Mecánica",
-  "Ciencias Económicas",
-  "Ciencias de la Salud",
-  "Ciencias Sociales",
-  "Derecho",
-  "Arquitectura",
+  "Ingeniería Biomédica",
+  "Administración de Empresas",
+  "Matemáticas",
+  "Economía",
 ];
 
 const horariosOptions = [

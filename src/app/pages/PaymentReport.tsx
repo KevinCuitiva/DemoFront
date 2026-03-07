@@ -29,15 +29,15 @@ const P = {
 // Datos de ejemplo
 const teamsData = [
   { id: 1, nombre: "Los Compiladores", decanatura: "Ing. Sistemas", capitan: "Juan Pérez", monto: 50000, estado: "pagado", fecha: "2026-02-15" },
-  { id: 2, nombre: "Bug Hunters", decanatura: "Ing. Sistemas", capitan: "María García", monto: 50000, estado: "pagado", fecha: "2026-02-18" },
+  { id: 2, nombre: "Bug Hunters", decanatura: "Ing. de Inteligencia Artificial", capitan: "María García", monto: 50000, estado: "pagado", fecha: "2026-02-18" },
   { id: 3, nombre: "Stack Overflow FC", decanatura: "Ing. Industrial", capitan: "Carlos López", monto: 50000, estado: "pendiente", fecha: "-" },
   { id: 4, nombre: "Null Pointers", decanatura: "Ing. Electrónica", capitan: "Ana Martínez", monto: 50000, estado: "pagado", fecha: "2026-02-20" },
   { id: 5, nombre: "Recursive United", decanatura: "Ing. Civil", capitan: "Pedro Sánchez", monto: 50000, estado: "pagado", fecha: "2026-02-22" },
-  { id: 6, nombre: "Array Warriors", decanatura: "Ing. Sistemas", capitan: "Laura Díaz", monto: 50000, estado: "pendiente", fecha: "-" },
-  { id: 7, nombre: "Boolean FC", decanatura: "Ciencias Económicas", capitan: "Diego Torres", monto: 50000, estado: "pagado", fecha: "2026-02-25" },
+  { id: 6, nombre: "Array Warriors", decanatura: "Ing. de Ciberseguridad", capitan: "Laura Díaz", monto: 50000, estado: "pendiente", fecha: "-" },
+  { id: 7, nombre: "Boolean FC", decanatura: "Administración de Empresas", capitan: "Diego Torres", monto: 50000, estado: "pagado", fecha: "2026-02-25" },
   { id: 8, nombre: "Async Avengers", decanatura: "Ing. Mecánica", capitan: "Sofia Ruiz", monto: 50000, estado: "rechazado", fecha: "-" },
-  { id: 9, nombre: "Code Masters", decanatura: "Ing. Sistemas", capitan: "Miguel Ángel", monto: 50000, estado: "pagado", fecha: "2026-02-28" },
-  { id: 10, nombre: "Dev United", decanatura: "Arquitectura", capitan: "Camila Rojas", monto: 50000, estado: "pendiente", fecha: "-" },
+  { id: 9, nombre: "Code Masters", decanatura: "Ing. en Biotecnología", capitan: "Miguel Ángel", monto: 50000, estado: "pagado", fecha: "2026-02-28" },
+  { id: 10, nombre: "Dev United", decanatura: "Ing. Biomédica", capitan: "Camila Rojas", monto: 50000, estado: "pendiente", fecha: "-" },
 ];
 
 export function PaymentReport() {

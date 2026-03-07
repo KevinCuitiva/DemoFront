@@ -130,6 +130,7 @@ export function ArbitroDashboard() {
 
   const handleLogout = () => {
     setShowLogout(false);
+    sessionStorage.removeItem("userContext");
     navigate("/login");
   };
 
