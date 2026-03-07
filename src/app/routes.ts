@@ -2,6 +2,11 @@ import { createBrowserRouter } from "react-router";
 import { LandingPage } from "./pages/LandingPage";
 import { Dashboard } from "./pages/Dashboard";
 import { ArbitroDashboard } from "./pages/ArbitroDashboard";
+import { AdminDashboard } from "./pages/AdminDashboard";
+import { CreateTournament } from "./pages/CreateTournament";
+import { PaymentReport } from "./pages/PaymentReport";
+import { ManageTournaments } from "./pages/ManageTournaments";
+import { TournamentDetail } from "./pages/TournamentDetail";
 import { MatchDetail } from "./pages/MatchDetail";
 import { Events } from "./pages/Events";
 import { Profile } from "./pages/Profile";
@@ -30,6 +35,11 @@ export const router = createBrowserRouter([
       { path: "dashboard", Component: Dashboard },
       { path: "dashboard-arbitro", Component: ArbitroDashboard },
       { path: "dashboard-arbitro/partido/:id", Component: MatchDetail },
+      { path: "dashboard-admin", Component: AdminDashboard },
+      { path: "admin/create-tournament", Component: CreateTournament },
+      { path: "admin/payment-report", Component: PaymentReport },
+      { path: "admin/tournaments", Component: ManageTournaments },
+      { path: "admin/tournaments/:id", Component: TournamentDetail },
       { path: "events", Component: Events },
       { path: "profile", Component: Profile },
       { path: "matches", Component: Matches },

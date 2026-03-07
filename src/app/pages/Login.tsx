@@ -274,7 +274,7 @@ export function Login() {
                     {[
                       { label: "Usuario", path: "/dashboard", color: "#6E6E73" },
                       { label: "Árbitro", path: "/dashboard-arbitro", color: P.secondary },
-                      { label: "Administrador", path: "/dashboard", color: P.primary },
+                      { label: "Administrador", path: "/dashboard-admin", color: P.primary },
                     ].map(({ label, path, color }) => (
                       <motion.button
                         key={label}

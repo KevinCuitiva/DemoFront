@@ -128,7 +128,7 @@ function NotifPanel({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.97 }}
       transition={{ type: "spring", stiffness: 340, damping: 28 }}
-      className="absolute right-0 top-12 w-[340px] sm:w-[380px] bg-white rounded-[20px] overflow-hidden z-50"
+      className="absolute right-0 sm:right-0 left-4 sm:left-auto top-12 sm:w-[380px] bg-white rounded-[20px] overflow-hidden z-50"
       style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.14)" }}
     >
       {/* Header */}
@@ -1247,6 +1247,17 @@ export function Dashboard() {
             </motion.div>
           </Link>
 
+          {/* Role badge */}
+          <div
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full"
+            style={{ backgroundColor: `${P.primary}12`, border: `1px solid ${P.primary}30` }}
+          >
+            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: P.primary }} />
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", color: P.primary, textTransform: "uppercase" }}>
+              Usuario
+            </span>
+          </div>
+
           {/* Right controls */}
           <div className="flex items-center gap-1.5">
 
@@ -1299,9 +1310,9 @@ export function Dashboard() {
                 whileHover={{ scale: 1.06 }}
                 whileTap={{ scale: 0.93 }}
                 className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200"
-                style={{ background: `${P.secondary}18`, border: `1.5px solid ${P.secondary}30` }}
+                style={{ background: `${P.primary}18`, border: `1.5px solid ${P.primary}30` }}
               >
-                <User style={{ width: 16, height: 16, color: P.secondary }} />
+                <User style={{ width: 16, height: 16, color: P.primary }} />
               </motion.div>
             </Link>
           </div>
@@ -1431,16 +1442,16 @@ export function Dashboard() {
           <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(#fff 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
           {/* Fade bottom edge to bg */}
           <div className="absolute bottom-0 left-0 right-0 h-16" style={{ background: "linear-gradient(to bottom, transparent, rgba(92,0,0,0.35))" }} />
-          {/* Golden shimmer */}
-          <div className="absolute top-0 right-0 w-56 h-56 rounded-full blur-3xl opacity-[0.15]" style={{ background: "#C4841D", transform: "translate(40%,-40%)" }} />
+          {/* Red shimmer */}
+          <div className="absolute top-0 right-0 w-56 h-56 rounded-full blur-3xl opacity-[0.15]" style={{ background: "#B81C1C", transform: "translate(40%,-40%)" }} />
 
           <div className="relative z-10 px-8 py-9 sm:py-11">
             <div
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5"
-              style={{ background: "rgba(196,132,29,0.2)", border: "1px solid rgba(196,132,29,0.4)" }}
+              style={{ background: "rgba(184,28,28,0.25)", border: "1px solid rgba(184,28,28,0.5)" }}
             >
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#E8B86D" }} />
-              <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.18em", color: "#E8B86D", textTransform: "uppercase" }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#FF6B6B" }} />
+              <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.18em", color: "#FF6B6B", textTransform: "uppercase" }}>
                 Panel Principal · TECHCUP 2026
               </span>
             </div>

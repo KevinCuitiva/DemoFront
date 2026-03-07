@@ -1,16 +1,32 @@
 import { motion } from "motion/react";
 import { Link, useLocation } from "react-router";
-import { LayoutDashboard, Swords, Trophy, User } from "lucide-react";
+import { LayoutDashboard, Swords, Trophy, User, FolderKanban, PlusCircle } from "lucide-react";
 
 export function MobileNav() {
   const location = useLocation();
 
-  const navItems = [
-    { path: "/dashboard", icon: LayoutDashboard, label: "Inicio" },
-    { path: "/matches", icon: Swords, label: "Partidos" },
-    { path: "/scores", icon: Trophy, label: "Puntuación" },
-    { path: "/profile", icon: User, label: "Perfil" },
-  ];
+  // Detectar el contexto: árbitro, admin o normal
+  const isArbitroContext = location.pathname.startsWith("/dashboard-arbitro");
+  const isAdminContext = location.pathname.startsWith("/dashboard-admin") || location.pathname.startsWith("/admin/");
+  
+  let dashboardPath = "/dashboard";
+  if (isArbitroContext) dashboardPath = "/dashboard-arbitro";
+  if (isAdminContext) dashboardPath = "/dashboard-admin";
+
+  // Diferentes items de navegación según el contexto
+  const navItems = isAdminContext
+    ? [
+        { path: dashboardPath, icon: LayoutDashboard, label: "Inicio" },
+        { path: "/admin/tournaments", icon: FolderKanban, label: "Torneos" },
+        { path: "/admin/create-tournament", icon: PlusCircle, label: "Crear" },
+        { path: "/profile", icon: User, label: "Perfil" },
+      ]
+    : [
+        { path: dashboardPath, icon: LayoutDashboard, label: "Inicio" },
+        { path: "/matches", icon: Swords, label: "Partidos" },
+        { path: "/scores", icon: Trophy, label: "Puntuación" },
+        { path: "/profile", icon: User, label: "Perfil" },
+      ];
 
   // Hide bottom nav on pages that don't need it (landing, login, register)
   const hiddenPaths = ["/", "/login", "/register"];
@@ -28,7 +44,7 @@ export function MobileNav() {
           const Icon = item.icon;
           const isActive =
             location.pathname === item.path ||
-            (item.path === "/dashboard" && location.pathname === "/dashboard");
+            (item.path === dashboardPath && location.pathname === dashboardPath);
 
           return (
             <Link key={item.path} to={item.path} className="flex-1">
@@ -42,11 +58,23 @@ export function MobileNav() {
                     y: isActive ? -3 : 0,
                   }}
                   transition={{ type: "spring", stiffness: 320, damping: 22 }}
-                  className={`p-2.5 rounded-xl transition-colors duration-300 ${
-                    isActive
-                      ? "bg-[#B81C1C] shadow-lg shadow-[#B81C1C]/25"
-                      : "bg-transparent"
-                  }`}
+                  className={`p-2.5 rounded-xl transition-colors duration-300`}
+                  style={{
+                    backgroundColor: isActive
+                      ? isAdminContext
+                        ? "#17C964"
+                        : isArbitroContext
+                        ? "#C4841D"
+                        : "#B81C1C"
+                      : "transparent",
+                    boxShadow: isActive
+                      ? isAdminContext
+                        ? "0 4px 16px rgba(23,201,100,0.25)"
+                        : isArbitroContext
+                        ? "0 4px 16px rgba(196,132,29,0.25)"
+                        : "0 4px 16px rgba(184,28,28,0.25)"
+                      : "none",
+                  }}
                 >
                   <Icon
                     className={`w-5 h-5 transition-colors duration-300 ${
@@ -55,10 +83,17 @@ export function MobileNav() {
                   />
                 </motion.div>
                 <span
-                  className={`text-xs transition-colors duration-300 ${
-                    isActive ? "text-[#B81C1C]" : "text-[#ADB5BD]"
-                  }`}
-                  style={{ fontWeight: isActive ? 600 : 500 }}
+                  className={`text-xs transition-colors duration-300`}
+                  style={{
+                    color: isActive
+                      ? isAdminContext
+                        ? "#17C964"
+                        : isArbitroContext
+                        ? "#C4841D"
+                        : "#B81C1C"
+                      : "#ADB5BD",
+                    fontWeight: isActive ? 600 : 500,
+                  }}
                 >
                   {item.label}
                 </span>

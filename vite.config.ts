@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+// @ts-expect-error - path is available in Node environment
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
@@ -13,6 +14,7 @@ export default defineConfig({
   resolve: {
     alias: {
       // Alias @ to the src directory
+      // @ts-expect-error - __dirname is available in Node environment
       '@': path.resolve(__dirname, './src'),
     },
   },

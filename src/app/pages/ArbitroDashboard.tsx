@@ -11,8 +11,6 @@ import {
   Trophy,
   Info,
   LogOut,
-  Bell,
-  X,
   ChevronRight,
   ChevronLeft,
   Clock,
@@ -101,144 +99,14 @@ const statusConfig: Record<MatchStatus, { label: string; color: string; glassCol
   },
 };
 
-// ── Notification panel ────────────────────────────
-interface Notif {
-  id: number;
-  title: string;
-  body: string;
-  time: string;
-  read: boolean;
-  color: string;
-}
-
-const initialNotifs: Notif[] = [
-  {
-    id: 1,
-    title: "Partido asignado",
-    body: "Stack Overflow FC vs Null Pointers · Hoy 2:00 PM",
-    time: "Hace 15 min",
-    read: false,
-    color: P.secondary,
-  },
-  {
-    id: 2,
-    title: "Recordatorio de partido",
-    body: "Los Compiladores vs Bug Hunters comienza en 30 min",
-    time: "Hace 30 min",
-    read: false,
-    color: P.primary,
-  },
-];
-
-function NotifPanel({
-  notifs,
-  onClose,
-  onMarkAll,
-}: {
-  notifs: Notif[];
-  onClose: () => void;
-  onMarkAll: () => void;
-}) {
-  const unread = notifs.filter((n) => !n.read).length;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -10, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.97 }}
-      transition={{ type: "spring", stiffness: 340, damping: 28 }}
-      className="absolute right-0 top-12 w-[340px] sm:w-[380px] bg-white rounded-[20px] overflow-hidden z-50"
-      style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.14)" }}
-    >
-      <div className="flex items-center justify-between px-5 py-4 border-b border-black/5">
-        <div className="flex items-center gap-2">
-          <Bell className="w-4 h-4" style={{ color: P.primary }} />
-          <span className="text-sm" style={{ fontWeight: 700 }}>Notificaciones</span>
-          {unread > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: P.primary, fontWeight: 700 }}>
-              {unread}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {unread > 0 && (
-            <button onClick={onMarkAll} className="text-xs" style={{ color: P.info, fontWeight: 600 }}>
-              Marcar todo
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#F8F9FA] transition-colors duration-200"
-          >
-            <X className="w-4 h-4" style={{ color: P.default }} />
-          </button>
-        </div>
-      </div>
-
-      <div className="divide-y divide-black/4 max-h-[340px] overflow-y-auto">
-        {notifs.map((n) => (
-          <div
-            key={n.id}
-            className="w-full text-left px-5 py-4 flex items-start gap-3 relative"
-            style={{ backgroundColor: n.read ? "transparent" : `${n.color}05` }}
-          >
-            {!n.read && (
-              <div className="absolute top-4 right-4 w-2 h-2 rounded-full" style={{ backgroundColor: n.color }} />
-            )}
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-              style={{ backgroundColor: `${n.color}18` }}
-            >
-              <Bell className="w-4 h-4" style={{ color: n.color }} />
-            </div>
-            <div className="flex-1 min-w-0 pr-4">
-              <p className="text-sm leading-snug" style={{ fontWeight: 600 }}>{n.title}</p>
-              <p className="text-xs mt-0.5" style={{ color: P.default, fontWeight: 500 }}>{n.body}</p>
-              <p className="text-[11px] mt-1" style={{ color: P.default, fontWeight: 500 }}>{n.time}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="px-5 py-3 border-t border-black/5 bg-[#FAFAFA] text-center">
-        <span className="text-xs" style={{ color: P.default, fontWeight: 500 }}>
-          Notificaciones de partidos asignados
-        </span>
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Toast ─────────────────────────────────────────
-function Toast({ msg, color }: { msg: string; color: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 48, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 48, scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 340, damping: 26 }}
-      className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 px-5 py-3.5 rounded-2xl text-white shadow-2xl"
-      style={{ backgroundColor: color, boxShadow: `0 12px 40px ${color}50` }}
-    >
-      <CheckCircle2 className="w-5 h-5" />
-      <span className="text-sm whitespace-nowrap" style={{ fontWeight: 700 }}>{msg}</span>
-    </motion.div>
-  );
-}
-
 // ── ArbitroDashboard ──────────────────────────────
 export function ArbitroDashboard() {
   const navigate = useNavigate();
   const [showLogout, setShowLogout] = useState(false);
-  const [notifs, setNotifs] = useState<Notif[]>(initialNotifs);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; color: string } | null>(null);
-  const notifRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  const unreadCount = notifs.filter((n) => !n.read).length;
   const todayMatches = assignedMatches.filter((m) => m.date === "Hoy");
 
   const updateScroll = () => {
@@ -259,21 +127,6 @@ export function ArbitroDashboard() {
     el.addEventListener("scroll", updateScroll);
     return () => el.removeEventListener("scroll", updateScroll);
   }, []);
-
-  useEffect(() => {
-    if (!notifOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setNotifOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [notifOpen]);
-
-  const handleMarkAll = () => {
-    setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
 
   const handleLogout = () => {
     setShowLogout(false);
@@ -314,47 +167,16 @@ export function ArbitroDashboard() {
           {/* Role badge */}
           <div
             className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full"
-            style={{ backgroundColor: `${P.info}12`, border: `1px solid ${P.info}30` }}
+            style={{ backgroundColor: `${P.secondary}12`, border: `1px solid ${P.secondary}30` }}
           >
-            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: P.info }} />
-            <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", color: P.info, textTransform: "uppercase" }}>
+            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: P.secondary }} />
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", color: P.secondary, textTransform: "uppercase" }}>
               Árbitro
             </span>
           </div>
 
           {/* Right controls */}
           <div className="flex items-center gap-1.5">
-            <div className="relative" ref={notifRef}>
-              <motion.button
-                whileHover={{ scale: 1.06 }}
-                whileTap={{ scale: 0.93 }}
-                onClick={() => setNotifOpen((v) => !v)}
-                className="relative w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200"
-                style={{ background: notifOpen ? "rgba(184,28,28,0.08)" : "transparent" }}
-              >
-                <Bell style={{ width: 19, height: 19, color: notifOpen ? P.primary : P.default }} />
-                {unreadCount > 0 && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-white border-2"
-                    style={{ backgroundColor: P.primary, fontSize: 9, fontWeight: 800, borderColor: P.bg }}
-                  >
-                    {unreadCount}
-                  </motion.div>
-                )}
-              </motion.button>
-              <AnimatePresence>
-                {notifOpen && (
-                  <NotifPanel
-                    notifs={notifs}
-                    onClose={() => setNotifOpen(false)}
-                    onMarkAll={handleMarkAll}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-
             <motion.button
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.93 }}
@@ -369,9 +191,9 @@ export function ArbitroDashboard() {
                 whileHover={{ scale: 1.06 }}
                 whileTap={{ scale: 0.93 }}
                 className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200"
-                style={{ background: `${P.info}18`, border: `1.5px solid ${P.info}30` }}
+                style={{ background: `${P.secondary}18`, border: `1.5px solid ${P.secondary}30` }}
               >
-                <User style={{ width: 16, height: 16, color: P.info }} />
+                <User style={{ width: 16, height: 16, color: P.secondary }} />
               </motion.div>
             </Link>
           </div>
@@ -424,11 +246,6 @@ export function ArbitroDashboard() {
         )}
       </AnimatePresence>
 
-      {/* ── Toast ── */}
-      <AnimatePresence>
-        {toast && <Toast msg={toast.msg} color={toast.color} />}
-      </AnimatePresence>
-
       {/* ── Main ── */}
       <main className="max-w-3xl mx-auto px-6 sm:px-10 pt-10 pb-16">
 
@@ -439,20 +256,20 @@ export function ArbitroDashboard() {
           transition={{ delay: 0.06, duration: 0.55, ease: "easeOut" }}
           className="relative overflow-hidden rounded-[24px] mb-8"
           style={{
-            background: "linear-gradient(160deg, #5C0000 0%, #8B0000 45%, #B81C1C 100%)",
-            boxShadow: "0 8px 32px rgba(184,28,28,0.22)",
+            background: "linear-gradient(160deg, #8B5C00 0%, #A8700D 45%, #C4841D 100%)",
+            boxShadow: "0 8px 32px rgba(196,132,29,0.25)",
           }}
         >
           <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(#fff 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
-          <div className="absolute bottom-0 left-0 right-0 h-16" style={{ background: "linear-gradient(to bottom, transparent, rgba(92,0,0,0.35))" }} />
+          <div className="absolute bottom-0 left-0 right-0 h-16" style={{ background: "linear-gradient(to bottom, transparent, rgba(139,92,0,0.35))" }} />
           <div className="absolute top-0 right-0 w-56 h-56 rounded-full blur-3xl opacity-[0.15]" style={{ background: "#C4841D", transform: "translate(40%,-40%)" }} />
 
           <div className="relative z-10 px-8 pt-8 sm:pt-10 pb-6">
 
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5" style={{ background: "rgba(0,102,254,0.25)", border: "1px solid rgba(0,102,254,0.5)" }}>
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#6DB3FF" }} />
-              <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.18em", color: "#6DB3FF", textTransform: "uppercase" }}>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5" style={{ background: "rgba(196,132,29,0.25)", border: "1px solid rgba(196,132,29,0.5)" }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#FFD27A" }} />
+              <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.18em", color: "#FFD27A", textTransform: "uppercase" }}>
                 Panel de Árbitro · TECHCUP 2026
               </span>
             </div>
