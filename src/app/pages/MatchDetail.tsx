@@ -475,7 +475,7 @@ export function MatchDetail() {
     : `${minute}:${String(seconds).padStart(2, "0")}`;
 
   return (
-    <div className="min-h-screen pb-44 lg:pb-36" style={{ backgroundColor: P.bg }}>
+    <div className="min-h-screen pb-60 sm:pb-48 lg:pb-36" style={{ backgroundColor: P.bg }}>
 
       {/* ── Halftime overlay ── */}
       <AnimatePresence>
@@ -713,7 +713,7 @@ export function MatchDetail() {
 
       {/* ── Bottom Actions ── */}
       <div
-        className="fixed bottom-0 left-0 right-0 px-4 pb-6 pt-4 z-30"
+        className="fixed bottom-0 left-0 right-0 px-4 pb-8 sm:pb-6 pt-4 z-30"
         style={{ background: "linear-gradient(to top, rgba(242,242,247,1) 70%, transparent)" }}
       >
         <div className="max-w-3xl mx-auto flex flex-col gap-2.5">
