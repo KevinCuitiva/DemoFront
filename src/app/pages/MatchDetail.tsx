@@ -475,7 +475,7 @@ export function MatchDetail() {
     : `${minute}:${String(seconds).padStart(2, "0")}`;
 
   return (
-    <div className="min-h-screen pb-72 sm:pb-56 lg:pb-36" style={{ backgroundColor: P.bg }}>
+    <div className="min-h-screen pb-8" style={{ backgroundColor: P.bg }}>
 
       {/* ── Halftime overlay ── */}
       <AnimatePresence>
@@ -710,16 +710,11 @@ export function MatchDetail() {
         </motion.div>
 
         {/* Spacer for mobile to ensure scroll space */}
-        <div className="h-24 sm:h-12 lg:h-0" />
+        <div className="h-8" />
 
-      </div>
-
-      {/* ── Bottom Actions ── */}
-      <div
-        className="fixed bottom-0 left-0 right-0 px-4 pb-10 sm:pb-8 lg:pb-6 pt-6 z-30"
-        style={{ background: "linear-gradient(to top, rgba(242,242,247,1) 80%, rgba(242,242,247,0.95) 100%)" }}
-      >
-        <div className="max-w-3xl mx-auto flex flex-col gap-2.5">
+        {/* ── Bottom Actions ── */}
+        <div className="pb-8">
+          <div className="flex flex-col gap-2.5">
 
           {/* ── No iniciado ── */}
           {matchState === "no-iniciado" && (
@@ -833,7 +828,9 @@ export function MatchDetail() {
             </motion.button>
           )}
 
+          </div>
         </div>
+
       </div>
 
       {/* ── Confirm finalizar ── */}
