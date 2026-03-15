@@ -109,11 +109,60 @@ interface TeamScheduleItem {
   hour: string;
 }
 
+interface TeamMemberStats {
+  id: number;
+  name: string;
+  role: "Capitán" | "Jugador";
+  goals: number;
+  yellowCards: number;
+  redCards: number;
+  corners: number;
+  fouls: number;
+}
+
+interface TeamPerformance {
+  members: TeamMemberStats[];
+  totalPoints: number;
+}
+
 const createTeamSchedule = (teamName: string): TeamScheduleItem[] => [
   { id: 1, date: "2026-03-18", label: "Fase de grupos", opponent: `${teamName} vs Equipo Nova`, venue: "Cancha Norte", hour: "09:00" },
   { id: 2, date: "2026-03-22", label: "Fase de grupos", opponent: `${teamName} vs Equipo Delta`, venue: "Cancha Central", hour: "14:00" },
   { id: 3, date: "2026-03-27", label: "Cuartos de final", opponent: `${teamName} vs Equipo Alpha`, venue: "Cancha Sur", hour: "16:00" },
 ];
+
+const createTeamPerformance = (roleInTeam: RoleType): TeamPerformance => {
+  const members: TeamMemberStats[] = [
+    {
+      id: 1,
+      name: roleInTeam === "capitan" ? "Tú" : "Carlos Méndez",
+      role: "Capitán",
+      goals: 4,
+      yellowCards: 1,
+      redCards: 0,
+      corners: 6,
+      fouls: 3,
+    },
+    {
+      id: 2,
+      name: roleInTeam === "jugador" ? "Tú" : "Laura Suárez",
+      role: "Jugador",
+      goals: 3,
+      yellowCards: 2,
+      redCards: 0,
+      corners: 4,
+      fouls: 5,
+    },
+    { id: 3, name: "Andrés Pardo", role: "Jugador", goals: 2, yellowCards: 0, redCards: 0, corners: 3, fouls: 2 },
+    { id: 4, name: "Sofía Rincón", role: "Jugador", goals: 1, yellowCards: 1, redCards: 0, corners: 5, fouls: 4 },
+    { id: 5, name: "Miguel Rojas", role: "Jugador", goals: 2, yellowCards: 1, redCards: 1, corners: 2, fouls: 6 },
+  ];
+
+  return {
+    members,
+    totalPoints: 12,
+  };
+};
 
 // ── Notification Panel ────────────────────────────
 function NotifPanel({
@@ -930,6 +979,118 @@ function Toast({ msg, color }: { msg: string; color: string }) {
   );
 }
 
+function TeamScoreModal({
+  teamName,
+  performance,
+  onClose,
+}: {
+  teamName: string;
+  performance: TeamPerformance;
+  onClose: () => void;
+}) {
+  const totalGoals = performance.members.reduce((sum, member) => sum + member.goals, 0);
+  const totalYellow = performance.members.reduce((sum, member) => sum + member.yellowCards, 0);
+  const totalRed = performance.members.reduce((sum, member) => sum + member.redCards, 0);
+  const totalCorners = performance.members.reduce((sum, member) => sum + member.corners, 0);
+  const totalFouls = performance.members.reduce((sum, member) => sum + member.fouls, 0);
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-[82] bg-black/30 backdrop-blur-sm"
+      />
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 24, scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        className="fixed inset-0 z-[83] flex items-center justify-center px-4 sm:px-6 pointer-events-none"
+      >
+        <div
+          className="w-full max-w-4xl bg-white rounded-3xl overflow-hidden pointer-events-auto"
+          style={{ boxShadow: "0 28px 80px rgba(0,0,0,0.18)", maxHeight: "88vh" }}
+        >
+          <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${P.primary}, ${P.info})` }} />
+          <div className="p-5 sm:p-6 border-b border-black/8 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest" style={{ color: P.info, fontWeight: 700 }}>
+                Estadísticas del equipo
+              </p>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: P.textPrimary }}>{teamName}</h3>
+              <p className="text-xs mt-1" style={{ color: P.default, fontWeight: 600 }}>
+                Total de puntos del equipo: {performance.totalPoints}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-[#F8F9FA]"
+            >
+              <X className="w-4 h-4" style={{ color: P.default }} />
+            </button>
+          </div>
+
+          <div className="px-5 sm:px-6 py-4 overflow-auto" style={{ maxHeight: "58vh" }}>
+            <table className="w-full min-w-[760px]">
+              <thead>
+                <tr className="border-b border-black/8">
+                  <th className="text-left py-2 text-xs" style={{ color: P.default, fontWeight: 700 }}>Integrante</th>
+                  <th className="text-center py-2 text-xs" style={{ color: P.default, fontWeight: 700 }}>Goles</th>
+                  <th className="text-center py-2 text-xs" style={{ color: P.default, fontWeight: 700 }}>Amarillas</th>
+                  <th className="text-center py-2 text-xs" style={{ color: P.default, fontWeight: 700 }}>Rojas</th>
+                  <th className="text-center py-2 text-xs" style={{ color: P.default, fontWeight: 700 }}>Tiros de esquina</th>
+                  <th className="text-center py-2 text-xs" style={{ color: P.default, fontWeight: 700 }}>Faltas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {performance.members.map((member) => (
+                  <tr key={member.id} className="border-b border-black/6">
+                    <td className="py-3">
+                      <p style={{ fontWeight: 700, color: P.textPrimary, fontSize: "0.9rem" }}>{member.name}</p>
+                      <p style={{ fontWeight: 600, color: P.default, fontSize: "0.72rem" }}>{member.role}</p>
+                    </td>
+                    <td className="text-center py-3" style={{ fontWeight: 700 }}>{member.goals}</td>
+                    <td className="text-center py-3" style={{ fontWeight: 700 }}>{member.yellowCards}</td>
+                    <td className="text-center py-3" style={{ fontWeight: 700 }}>{member.redCards}</td>
+                    <td className="text-center py-3" style={{ fontWeight: 700 }}>{member.corners}</td>
+                    <td className="text-center py-3" style={{ fontWeight: 700 }}>{member.fouls}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="px-5 sm:px-6 py-4 border-t border-black/8 bg-[#FAFAFA] grid grid-cols-2 sm:grid-cols-5 gap-2">
+            <div className="rounded-xl px-3 py-2" style={{ backgroundColor: `${P.info}10` }}>
+              <p className="text-[11px]" style={{ color: P.default, fontWeight: 700 }}>Goles</p>
+              <p style={{ fontWeight: 800, color: P.info }}>{totalGoals}</p>
+            </div>
+            <div className="rounded-xl px-3 py-2" style={{ backgroundColor: `${P.secondary}10` }}>
+              <p className="text-[11px]" style={{ color: P.default, fontWeight: 700 }}>Amarillas</p>
+              <p style={{ fontWeight: 800, color: P.secondary }}>{totalYellow}</p>
+            </div>
+            <div className="rounded-xl px-3 py-2" style={{ backgroundColor: `${P.primary}10` }}>
+              <p className="text-[11px]" style={{ color: P.default, fontWeight: 700 }}>Rojas</p>
+              <p style={{ fontWeight: 800, color: P.primary }}>{totalRed}</p>
+            </div>
+            <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "rgba(0,0,0,0.05)" }}>
+              <p className="text-[11px]" style={{ color: P.default, fontWeight: 700 }}>Esquinas</p>
+              <p style={{ fontWeight: 800, color: P.textPrimary }}>{totalCorners}</p>
+            </div>
+            <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "rgba(0,0,0,0.05)" }}>
+              <p className="text-[11px]" style={{ color: P.default, fontWeight: 700 }}>Faltas</p>
+              <p style={{ fontWeight: 800, color: P.textPrimary }}>{totalFouls}</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 // ── Dashboard ─────────────────────────────────────
 export function Dashboard() {
   const navigate = useNavigate();
@@ -951,9 +1112,11 @@ export function Dashboard() {
   const [joinedAt, setJoinedAt] = useState<string | null>(null);
   const [teamSchedule, setTeamSchedule] = useState<TeamScheduleItem[]>([]);
   const [dateFilter, setDateFilter] = useState<"all" | "week" | "month">("all");
+  const [showTeamScore, setShowTeamScore] = useState(false);
 
   const isRegistered = Boolean(roleInTeam && teamName);
   const hasUploadedPayment = notifs.some((n) => n.type === "payment" && n.status === "uploaded");
+  const teamPerformance = roleInTeam ? createTeamPerformance(roleInTeam) : null;
 
   const ensurePaymentNotification = () => {
     setNotifs((prev) => {
@@ -1167,6 +1330,16 @@ export function Dashboard() {
               ensurePaymentNotification();
               showToast("¡Equipo inscrito exitosamente en TECHCUP!", P.success);
             }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showTeamScore && isRegistered && teamPerformance && (
+          <TeamScoreModal
+            teamName={teamName}
+            performance={teamPerformance}
+            onClose={() => setShowTeamScore(false)}
           />
         )}
       </AnimatePresence>
@@ -1392,16 +1565,32 @@ export function Dashboard() {
                     Rol: {roleInTeam === "capitan" ? "Capitán" : "Jugador"} · Inscrito: {joinedAt}
                   </p>
                 </div>
-                <span
-                  className="text-xs px-2.5 py-1 rounded-full"
-                  style={{
-                    backgroundColor: hasUploadedPayment ? `${P.success}18` : `${P.secondary}18`,
-                    color: hasUploadedPayment ? P.success : P.secondary,
-                    fontWeight: 700,
-                  }}
-                >
-                  {hasUploadedPayment ? "Pago enviado" : "Pago pendiente"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-xs px-2.5 py-1 rounded-full"
+                    style={{
+                      backgroundColor: "transparent",
+                      color: hasUploadedPayment ? P.success : P.secondary,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {hasUploadedPayment ? "Pago enviado" : "Pago pendiente"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowTeamScore(true)}
+                    className="text-xs px-3 py-1.5 rounded-lg border"
+                    style={{
+                      backgroundColor: "white",
+                      borderColor: `${P.info}45`,
+                      color: P.info,
+                      fontWeight: 800,
+                      boxShadow: `0 2px 10px ${P.info}1A`,
+                    }}
+                  >
+                    Puntuación
+                  </button>
+                </div>
               </div>
 
               <div className="flex gap-2 mb-4">
