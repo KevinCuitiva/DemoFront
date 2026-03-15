@@ -3,15 +3,15 @@ import { useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 import {
   ArrowLeft,
-  ExternalLink,
   Edit2,
   Settings,
-  Bell,
   KeyRound,
-  ShieldCheck,
   LayoutGrid,
   Activity,
   User,
+  X,
+  Save,
+  AlertCircle,
 } from "lucide-react";
 
 const P = {
@@ -25,22 +25,6 @@ const P = {
 };
 
 type Tab = "overview" | "settings" | "activity";
-
-function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      className="relative w-11 h-6 rounded-full transition-colors duration-300 flex-shrink-0"
-      style={{ backgroundColor: enabled ? P.success : "#E5E5EA" }}
-    >
-      <motion.div
-        animate={{ x: enabled ? 20 : 2 }}
-        transition={{ type: "spring", stiffness: 400, damping: 28 }}
-        className="absolute top-1 w-4 h-4 rounded-full bg-white shadow"
-      />
-    </button>
-  );
-}
 
 function SectionLabel({ text, color }: { text: string; color: string }) {
   return (
@@ -62,17 +46,52 @@ const activityLog = [
   { action: "Partido completado vs Equipo Nova", time: "Hace 3 semanas", color: P.default },
 ];
 
+function ModalShell({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-50 bg-black/25 backdrop-blur-sm"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 18 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 18 }}
+        transition={{ type: "spring", stiffness: 340, damping: 28 }}
+        className="fixed inset-0 z-50 flex items-center justify-center px-6 pointer-events-none"
+      >
+        <div
+          className="bg-white rounded-[24px] w-full max-w-md pointer-events-auto"
+          style={{ boxShadow: "0 32px 80px rgba(0,0,0,0.16)" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {children}
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 export function Profile() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("settings");
-  const [tournamentAlerts, setTournamentAlerts] = useState(true);
-  const [marketingEmails, setMarketingEmails] = useState(false);
-  const [firstName, setFirstName] = useState("Alex");
-  const [lastName, setLastName] = useState("Rivers");
-  const [email, setEmail] = useState("alex.rivers@techcup.io");
+  const firstName = "Alex";
+  const lastName = "Rivers";
+  const email = "alex.rivers@techcup.io";
   const [bio, setBio] = useState(
     "Apasionado por la integración de análisis de datos en el entrenamiento deportivo. Entrenador part-time en TechCup Academy."
   );
+  const [bioDraft, setBioDraft] = useState(bio);
+  const [showBioEditor, setShowBioEditor] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   // Detectar el contexto del usuario
   const savedContext = sessionStorage.getItem("userContext");
@@ -86,12 +105,49 @@ export function Profile() {
   }, []);
 
   // Determinar el dashboard de retorno y configuración de color
-  const dashboardPath = userContext === "admin" ? "/dashboard-admin" : userContext === "arbitro" ? "/dashboard-arbitro" : "/dashboard";
-  const badgeColor = userContext === "admin" ? P.success : userContext === "arbitro" ? P.secondary : P.primary;
-  const badgeLabel = userContext === "admin" ? "Administrador" : userContext === "arbitro" ? "Árbitro" : "Usuario";
+  const dashboardPath = userContext === "organizer" ? "/dashboard-organizer" : userContext === "arbitro" ? "/dashboard-arbitro" : "/dashboard";
+  const badgeColor = userContext === "organizer" ? P.success : userContext === "arbitro" ? P.secondary : P.primary;
+  const badgeLabel = userContext === "organizer" ? "Organizador" : userContext === "arbitro" ? "Árbitro" : "Usuario";
 
   const handleBack = () => {
     navigate(dashboardPath);
+  };
+
+  const showFeedback = (message: string) => {
+    setFeedbackMessage(message);
+    setTimeout(() => setFeedbackMessage(null), 2400);
+  };
+
+  const openBioEditor = () => {
+    setBioDraft(bio);
+    setShowBioEditor(true);
+  };
+
+  const handleSaveBio = () => {
+    setBio(bioDraft);
+    setShowBioEditor(false);
+    showFeedback("Biografía actualizada correctamente.");
+  };
+
+  const handleSavePassword = () => {
+    if (!currentPassword.trim()) {
+      setPasswordError("Ingresa la contraseña actual.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError("La nueva contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("La nueva contraseña y su confirmación no coinciden.");
+      return;
+    }
+    setShowPasswordModal(false);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+    showFeedback("Contraseña actualizada correctamente.");
   };
 
   const tabs: { id: Tab; label: string; icon: typeof LayoutGrid }[] = [
@@ -179,27 +235,7 @@ export function Profile() {
               </div>
             </div>
 
-            {/* CTA */}
-            <motion.button
-              whileHover={{ scale: 1.04, y: -1 }}
-              whileTap={{ scale: 0.96 }}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-white flex-shrink-0"
-              style={{ backgroundColor: P.secondary, fontWeight: 600, fontSize: "0.82rem", boxShadow: `0 4px 14px ${P.secondary}35` }}
-            >
-              Ver Perfil Público
-              <ExternalLink style={{ width: 13, height: 13 }} />
-            </motion.button>
           </div>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            className="sm:hidden mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white"
-            style={{ backgroundColor: P.secondary, fontWeight: 600, fontSize: "0.82rem" }}
-          >
-            Ver Perfil Público
-            <ExternalLink style={{ width: 13, height: 13 }} />
-          </motion.button>
         </motion.div>
 
         {/* ── Tabs ── */}
@@ -298,7 +334,11 @@ export function Profile() {
                     <div>
                       <SectionLabel text="Información Personal" color={P.secondary} />
                     </div>
-                    <button className="flex items-center gap-1 flex-shrink-0 -mt-1" style={{ fontSize: "0.78rem", fontWeight: 600, color: P.secondary }}>
+                    <button
+                      onClick={openBioEditor}
+                      className="flex items-center gap-1 flex-shrink-0 -mt-1"
+                      style={{ fontSize: "0.78rem", fontWeight: 600, color: P.secondary }}
+                    >
                       <Edit2 style={{ width: 12, height: 12 }} />
                       Editar
                     </button>
@@ -307,8 +347,8 @@ export function Profile() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { label: "Nombre", value: firstName, setter: setFirstName },
-                        { label: "Apellido", value: lastName, setter: setLastName },
+                        { label: "Nombre", value: firstName },
+                        { label: "Apellido", value: lastName },
                       ].map((f) => (
                         <div key={f.label}>
                           <label className="block mb-1.5" style={{ fontSize: "0.75rem", fontWeight: 600, color: P.default }}>
@@ -317,17 +357,17 @@ export function Profile() {
                           <input
                             type="text"
                             value={f.value}
-                            onChange={(e) => f.setter(e.target.value)}
+                            readOnly
+                            disabled
                             className="w-full px-3.5 py-2.5 rounded-xl outline-none transition-all duration-200"
                             style={{
                               fontSize: "0.88rem",
                               fontWeight: 500,
                               backgroundColor: P.bg,
                               border: "1.5px solid transparent",
-                              color: P.textPrimary,
+                              color: P.default,
+                              cursor: "not-allowed",
                             }}
-                            onFocus={(e) => (e.target.style.borderColor = P.secondary)}
-                            onBlur={(e) => (e.target.style.borderColor = "transparent")}
                           />
                         </div>
                       ))}
@@ -339,11 +379,10 @@ export function Profile() {
                       <input
                         type="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        readOnly
+                        disabled
                         className="w-full px-3.5 py-2.5 rounded-xl outline-none transition-all duration-200"
-                        style={{ fontSize: "0.88rem", fontWeight: 500, backgroundColor: P.bg, border: "1.5px solid transparent", color: P.textPrimary }}
-                        onFocus={(e) => (e.target.style.borderColor = P.secondary)}
-                        onBlur={(e) => (e.target.style.borderColor = "transparent")}
+                        style={{ fontSize: "0.88rem", fontWeight: 500, backgroundColor: P.bg, border: "1.5px solid transparent", color: P.default, cursor: "not-allowed" }}
                       />
                     </div>
                     <div>
@@ -352,12 +391,19 @@ export function Profile() {
                       </label>
                       <textarea
                         value={bio}
-                        onChange={(e) => setBio(e.target.value)}
+                        readOnly
+                        disabled
                         rows={3}
                         className="w-full px-3.5 py-2.5 rounded-xl outline-none transition-all duration-200 resize-none"
-                        style={{ fontSize: "0.88rem", fontWeight: 500, backgroundColor: P.bg, border: "1.5px solid transparent", color: P.textPrimary }}
-                        onFocus={(e) => (e.target.style.borderColor = P.secondary)}
-                        onBlur={(e) => (e.target.style.borderColor = "transparent")}
+                        style={{
+                          fontSize: "0.88rem",
+                          fontWeight: 500,
+                          backgroundColor: P.bg,
+                          border: "1.5px solid transparent",
+                          color: P.textPrimary,
+                          cursor: "not-allowed",
+                          opacity: 0.75,
+                        }}
                       />
                     </div>
                   </div>
@@ -367,15 +413,10 @@ export function Profile() {
                 <div className="p-6" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
                   <div className="flex items-start justify-between mb-5">
                     <SectionLabel text="Seguridad y Acceso" color={P.info} />
-                    <button className="flex items-center gap-1 flex-shrink-0 -mt-1" style={{ fontSize: "0.78rem", fontWeight: 600, color: P.info }}>
-                      <Settings style={{ width: 12, height: 12 }} />
-                      Gestionar
-                    </button>
                   </div>
                   <div className="space-y-3">
                     {[
                       { icon: KeyRound, label: "Contraseña", sub: "Actualizada hace 3 meses", color: P.info, action: "Cambiar" },
-                      { icon: ShieldCheck, label: "Autenticación 2FA", sub: "Actualmente habilitada", color: P.success, action: "Configurar" },
                     ].map((item) => {
                       const Icon = item.icon;
                       return (
@@ -394,6 +435,7 @@ export function Profile() {
                           <motion.button
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.97 }}
+                            onClick={() => setShowPasswordModal(true)}
                             className="px-3 py-1.5 rounded-xl bg-white flex-shrink-0"
                             style={{ fontSize: "0.75rem", fontWeight: 600, color: P.textPrimary, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}
                           >
@@ -402,44 +444,6 @@ export function Profile() {
                         </div>
                       );
                     })}
-                  </div>
-                </div>
-
-                {/* Notifications */}
-                <div className="p-6">
-                  <SectionLabel text="Notificaciones" color={P.primary} />
-                  <div className="space-y-5">
-                    {[
-                      { label: "Alertas del Torneo", sub: "Recibe notificaciones cuando inicia un nuevo torneo.", value: tournamentAlerts, setter: setTournamentAlerts },
-                      { label: "Correos de Marketing", sub: "Actualizaciones sobre nuevas funciones de la plataforma.", value: marketingEmails, setter: setMarketingEmails },
-                    ].map((n) => (
-                      <div key={n.label} className="flex items-start justify-between gap-4">
-                        <div>
-                          <p style={{ fontSize: "0.88rem", fontWeight: 600, color: P.textPrimary }}>{n.label}</p>
-                          <p className="mt-0.5" style={{ fontSize: "0.75rem", color: P.default, fontWeight: 500 }}>{n.sub}</p>
-                        </div>
-                        <Toggle enabled={n.value} onToggle={() => n.setter((v) => !v)} />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-end gap-3 mt-8 pt-5" style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      className="px-5 py-2.5 rounded-xl"
-                      style={{ fontSize: "0.85rem", fontWeight: 600, color: P.default, backgroundColor: P.bg }}
-                    >
-                      Descartar
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02, y: -1 }}
-                      whileTap={{ scale: 0.97 }}
-                      className="px-5 py-2.5 rounded-xl text-white"
-                      style={{ fontSize: "0.85rem", fontWeight: 600, backgroundColor: P.secondary, boxShadow: `0 4px 14px ${P.secondary}35` }}
-                    >
-                      Guardar Cambios
-                    </motion.button>
                   </div>
                 </div>
               </motion.div>
@@ -483,6 +487,110 @@ export function Profile() {
             )}
           </AnimatePresence>
         </motion.div>
+
+        <AnimatePresence>
+          {showBioEditor && (
+            <ModalShell onClose={() => setShowBioEditor(false)}>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: P.textPrimary }}>Editar biografía</h3>
+                    <p style={{ fontSize: "0.78rem", color: P.default, fontWeight: 500 }}>Actualiza tu descripción pública.</p>
+                  </div>
+                  <button onClick={() => setShowBioEditor(false)} className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: P.bg }}>
+                    <X style={{ width: 16, height: 16, color: P.default }} />
+                  </button>
+                </div>
+                <textarea
+                  value={bioDraft}
+                  onChange={(e) => setBioDraft(e.target.value)}
+                  rows={5}
+                  className="w-full px-4 py-3 rounded-2xl resize-none outline-none"
+                  style={{ fontSize: "0.9rem", fontWeight: 500, color: P.textPrimary, backgroundColor: P.bg, border: `1.5px solid ${P.secondary}20` }}
+                />
+                <div className="flex justify-end gap-3 mt-5">
+                  <button onClick={() => setShowBioEditor(false)} className="px-4 py-2.5 rounded-xl" style={{ backgroundColor: P.bg, color: P.default, fontWeight: 700, fontSize: "0.82rem" }}>
+                    Cerrar
+                  </button>
+                  <button onClick={handleSaveBio} className="px-4 py-2.5 rounded-xl text-white" style={{ backgroundColor: P.secondary, fontWeight: 700, fontSize: "0.82rem" }}>
+                    Guardar bio
+                  </button>
+                </div>
+              </div>
+            </ModalShell>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showPasswordModal && (
+            <ModalShell onClose={() => setShowPasswordModal(false)}>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: P.textPrimary }}>Cambiar contraseña</h3>
+                    <p style={{ fontSize: "0.78rem", color: P.default, fontWeight: 500 }}>Ingresa la contraseña actual y confirma la nueva.</p>
+                  </div>
+                  <button onClick={() => setShowPasswordModal(false)} className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: P.bg }}>
+                    <X style={{ width: 16, height: 16, color: P.default }} />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    { label: "Contraseña actual", value: currentPassword, setter: setCurrentPassword },
+                    { label: "Nueva contraseña", value: newPassword, setter: setNewPassword },
+                    { label: "Verificar nueva contraseña", value: confirmPassword, setter: setConfirmPassword },
+                  ].map((field) => (
+                    <div key={field.label}>
+                      <label className="block mb-1.5" style={{ fontSize: "0.75rem", fontWeight: 700, color: P.default }}>{field.label}</label>
+                      <input
+                        type="password"
+                        value={field.value}
+                        onChange={(e) => {
+                          field.setter(e.target.value);
+                          setPasswordError("");
+                        }}
+                        className="w-full px-4 py-3 rounded-xl outline-none"
+                        style={{ fontSize: "0.88rem", fontWeight: 500, backgroundColor: P.bg, color: P.textPrimary, border: "1.5px solid transparent" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {passwordError && (
+                  <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-xl" style={{ backgroundColor: `${P.primary}12` }}>
+                    <AlertCircle style={{ width: 15, height: 15, color: P.primary }} />
+                    <span style={{ fontSize: "0.76rem", fontWeight: 600, color: P.primary }}>{passwordError}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 mt-5">
+                  <button onClick={() => setShowPasswordModal(false)} className="px-4 py-2.5 rounded-xl" style={{ backgroundColor: P.bg, color: P.default, fontWeight: 700, fontSize: "0.82rem" }}>
+                    Cerrar
+                  </button>
+                  <button onClick={handleSavePassword} className="px-4 py-2.5 rounded-xl text-white flex items-center gap-2" style={{ backgroundColor: P.info, fontWeight: 700, fontSize: "0.82rem" }}>
+                    <Save style={{ width: 14, height: 14 }} />
+                    Guardar
+                  </button>
+                </div>
+              </div>
+            </ModalShell>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {feedbackMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.96 }}
+              className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[70] px-5 py-3 rounded-2xl text-white"
+              style={{ backgroundColor: P.success, boxShadow: `0 12px 40px ${P.success}45`, fontSize: "0.84rem", fontWeight: 700 }}
+            >
+              {feedbackMessage}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </main>
     </div>

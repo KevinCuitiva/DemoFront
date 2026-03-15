@@ -32,7 +32,7 @@ const navButtons = [
   {
     label: "Crear Torneo",
     icon: PlusCircle,
-    path: "/admin/create-tournament",
+    path: "/organizer/create-tournament",
     color: "#17C964",
     iconBg: "rgba(23,201,100,0.10)",
     iconGlow: "rgba(23,201,100,0.18)",
@@ -42,7 +42,7 @@ const navButtons = [
   {
     label: "Gestión de Torneos",
     icon: FolderKanban,
-    path: "/admin/tournaments",
+    path: "/organizer/tournaments",
     color: "#0066FE",
     iconBg: "rgba(0,102,254,0.10)",
     iconGlow: "rgba(0,102,254,0.18)",
@@ -52,7 +52,7 @@ const navButtons = [
   {
     label: "Información de Pagos",
     icon: CreditCard,
-    path: "/admin/payment-report",
+    path: "/organizer/payment-report",
     color: "#8B5CF6",
     iconBg: "rgba(139,92,246,0.10)",
     iconGlow: "rgba(139,92,246,0.18)",
@@ -91,8 +91,8 @@ const navButtons = [
   },
 ];
 
-// ── AdminDashboard ────────────────────────────────
-export function AdminDashboard() {
+// ── OrganizerDashboard ────────────────────────────
+export function OrganizerDashboard() {
   const navigate = useNavigate();
   const [showLogout, setShowLogout] = useState(false);
 
@@ -140,7 +140,7 @@ export function AdminDashboard() {
           >
             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: P.success }} />
             <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", color: P.success, textTransform: "uppercase" }}>
-              Administrador
+              Organizador
             </span>
           </div>
 
@@ -237,7 +237,7 @@ export function AdminDashboard() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5" style={{ background: "rgba(23,201,100,0.25)", border: "1px solid rgba(23,201,100,0.5)" }}>
               <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#5EFFA3" }} />
               <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.18em", color: "#5EFFA3", textTransform: "uppercase" }}>
-                Panel de Administración · TECHCUP 2026
+                Panel del Organizador · TECHCUP 2026
               </span>
             </div>
 
@@ -245,7 +245,7 @@ export function AdminDashboard() {
               Gestión del Torneo
             </h1>
             <p style={{ color: "rgba(255,255,255,0.6)", fontWeight: 400, fontSize: "0.92rem", lineHeight: 1.6, maxWidth: "42ch" }}>
-              Administra equipos, partidos, pagos y configuraciones del torneo TECHCUP.
+              Organiza equipos, partidos, pagos y configuraciones del torneo TECHCUP.
             </p>
           </div>
         </motion.div>
@@ -258,7 +258,7 @@ export function AdminDashboard() {
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm" style={{ fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: P.default }}>
-              Panel de Administración
+              Panel del Organizador
             </h2>
           </div>
 

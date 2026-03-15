@@ -92,7 +92,7 @@ export function CreateTournament() {
     console.log("Datos del torneo:", formData);
     setSaved(true);
     setTimeout(() => {
-      navigate("/dashboard-admin");
+      navigate("/dashboard-organizer");
     }, 2000);
   };
 

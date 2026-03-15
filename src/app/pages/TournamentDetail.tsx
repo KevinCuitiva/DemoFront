@@ -51,6 +51,9 @@ interface Match {
   teamB: string;
   scoreA?: number;
   scoreB?: number;
+  scorers?: Array<{ player: string; team: string; minute: string }>;
+  yellowCards?: Array<{ player: string; team: string; minute: string }>;
+  redCards?: Array<{ player: string; team: string; minute: string }>;
   status: "pending" | "in-progress" | "completed";
 }
 
@@ -65,8 +68,48 @@ const mockTeams: Team[] = [
 ];
 
 const mockMatches: Match[] = [
-  { id: 1, date: "2026-03-10", time: "14:00", court: "Cancha 1", teamA: "Los Tigres FC", teamB: "Relámpagos", scoreA: 3, scoreB: 2, status: "completed" },
-  { id: 2, date: "2026-03-10", time: "16:00", court: "Cancha 2", teamA: "Dragones Rojos", teamB: "Aguilas Doradas", status: "in-progress" },
+  {
+    id: 1,
+    date: "2026-03-10",
+    time: "14:00",
+    court: "Cancha 1",
+    teamA: "Los Tigres FC",
+    teamB: "Relámpagos",
+    scoreA: 3,
+    scoreB: 2,
+    scorers: [
+      { player: "Juan Pérez", team: "Los Tigres FC", minute: "11'" },
+      { player: "Luis Díaz", team: "Relámpagos", minute: "23'" },
+      { player: "Mateo Silva", team: "Los Tigres FC", minute: "46'" },
+      { player: "Carlos Rivas", team: "Relámpagos", minute: "58'" },
+      { player: "Andrés Gil", team: "Los Tigres FC", minute: "74'" },
+    ],
+    yellowCards: [
+      { player: "Sergio Mora", team: "Relámpagos", minute: "34'" },
+      { player: "David Luna", team: "Los Tigres FC", minute: "67'" },
+    ],
+    redCards: [
+      { player: "Felipe Rojas", team: "Relámpagos", minute: "82'" },
+    ],
+    status: "completed",
+  },
+  {
+    id: 2,
+    date: "2026-03-10",
+    time: "16:00",
+    court: "Cancha 2",
+    teamA: "Dragones Rojos",
+    teamB: "Aguilas Doradas",
+    scoreA: 1,
+    scoreB: 1,
+    scorers: [
+      { player: "Miguel Soto", team: "Dragones Rojos", minute: "18'" },
+      { player: "Daniel Ariza", team: "Aguilas Doradas", minute: "52'" },
+    ],
+    yellowCards: [{ player: "Julio Peña", team: "Dragones Rojos", minute: "40'" }],
+    redCards: [],
+    status: "in-progress",
+  },
   { id: 3, date: "2026-03-12", time: "14:00", court: "Cancha 1", teamA: "Los Tigres FC", teamB: "Dragones Rojos", status: "pending" },
   { id: 4, date: "2026-03-12", time: "16:00", court: "Cancha 2", teamA: "Relámpagos", teamB: "Aguilas Doradas", status: "pending" },
 ];
@@ -95,6 +138,15 @@ export function TournamentDetail() {
 
   const activeTeams = teams.filter((t) => t.status === "active");
   const eliminatedTeams = teams.filter((t) => t.status === "eliminated");
+  const scorersMap = matches.reduce<Record<string, number>>((acc, match) => {
+    match.scorers?.forEach((goal) => {
+      acc[goal.player] = (acc[goal.player] ?? 0) + 1;
+    });
+    return acc;
+  }, {});
+  const topScorers = Object.entries(scorersMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
 
   const getMatchStatusColor = (status: Match["status"]) => {
     switch (status) {
@@ -221,7 +273,7 @@ export function TournamentDetail() {
           >
             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: P.success }} />
             <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", color: P.success, textTransform: "uppercase" }}>
-              Administrador
+              Organizador
             </span>
           </div>
 
@@ -257,7 +309,7 @@ export function TournamentDetail() {
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
-          onClick={() => navigate("/admin/tournaments")}
+          onClick={() => navigate("/organizer/tournaments")}
           className="flex items-center gap-2 mb-6 text-sm group"
           style={{ color: P.default, fontWeight: 600 }}
         >
@@ -336,6 +388,69 @@ export function TournamentDetail() {
               </p>
             </div>
           </div>
+
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#F8FAFC" }}>
+              <p style={{ fontSize: "0.68rem", color: P.default, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Cupo máximo
+              </p>
+              <p style={{ fontSize: "0.88rem", color: P.textPrimary, fontWeight: 700 }}>16 equipos</p>
+            </div>
+            <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#F8FAFC" }}>
+              <p style={{ fontSize: "0.68rem", color: P.default, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Jugadores por equipo
+              </p>
+              <p style={{ fontSize: "0.88rem", color: P.textPrimary, fontWeight: 700 }}>11 jugadores</p>
+            </div>
+            <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#F8FAFC" }}>
+              <p style={{ fontSize: "0.68rem", color: P.default, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Costo de inscripción
+              </p>
+              <p style={{ fontSize: "0.88rem", color: P.textPrimary, fontWeight: 700 }}>$50.000 COP</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.17 }}
+          className="bg-white rounded-2xl p-5 mb-6 border"
+          style={{ borderColor: "rgba(0,0,0,0.06)" }}
+        >
+          <h2 className="text-sm mb-3" style={{ color: P.default, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            Tabla de goleadores
+          </h2>
+          {topScorers.length === 0 ? (
+            <p style={{ fontSize: "0.84rem", color: P.default, fontWeight: 500 }}>Aún no hay goleadores registrados.</p>
+          ) : (
+            <div className="space-y-2">
+              {topScorers.map(([player, goals], idx) => (
+                <div
+                  key={player}
+                  className="flex items-center justify-between rounded-xl px-3 py-2"
+                  style={{
+                    backgroundColor: idx === 0 ? `${P.secondary}14` : "#F7F7F8",
+                    border: idx === 0 ? `1px solid ${P.secondary}35` : "1px solid transparent",
+                  }}
+                >
+                  <p style={{ fontSize: "0.84rem", color: P.textPrimary, fontWeight: idx === 0 ? 800 : 600 }}>
+                    {idx + 1}. {player}
+                  </p>
+                  <span
+                    className="text-xs px-2 py-1 rounded-lg"
+                    style={{
+                      backgroundColor: idx === 0 ? `${P.secondary}20` : `${P.info}16`,
+                      color: idx === 0 ? P.secondary : P.info,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {goals} gol{goals > 1 ? "es" : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Tabs */}
@@ -733,6 +848,65 @@ export function TournamentDetail() {
                         </div>
                       )}
                     </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  <div className="rounded-xl p-4" style={{ backgroundColor: "#F7FAF8" }}>
+                    <p style={{ fontSize: "0.72rem", color: P.success, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      Goles
+                    </p>
+                    {selectedMatch.scorers && selectedMatch.scorers.length > 0 ? (
+                      <div className="mt-2 space-y-1.5">
+                        {selectedMatch.scorers.map((goal, idx) => (
+                          <p key={`${goal.player}-${idx}`} style={{ fontSize: "0.82rem", color: P.textPrimary, fontWeight: 600 }}>
+                            {goal.minute} · {goal.player} ({goal.team})
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2" style={{ fontSize: "0.8rem", color: P.default, fontWeight: 500 }}>
+                        Sin goles registrados.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl p-4" style={{ backgroundColor: "#FFF9EE" }}>
+                    <p style={{ fontSize: "0.72rem", color: P.secondary, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      Tarjetas Amarillas
+                    </p>
+                    {selectedMatch.yellowCards && selectedMatch.yellowCards.length > 0 ? (
+                      <div className="mt-2 space-y-1.5">
+                        {selectedMatch.yellowCards.map((card, idx) => (
+                          <p key={`${card.player}-${idx}`} style={{ fontSize: "0.82rem", color: P.textPrimary, fontWeight: 600 }}>
+                            {card.minute} · {card.player} ({card.team})
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2" style={{ fontSize: "0.8rem", color: P.default, fontWeight: 500 }}>
+                        Sin tarjetas amarillas.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl p-4" style={{ backgroundColor: "#FFF3F3" }}>
+                    <p style={{ fontSize: "0.72rem", color: P.primary, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      Tarjetas Rojas
+                    </p>
+                    {selectedMatch.redCards && selectedMatch.redCards.length > 0 ? (
+                      <div className="mt-2 space-y-1.5">
+                        {selectedMatch.redCards.map((card, idx) => (
+                          <p key={`${card.player}-${idx}`} style={{ fontSize: "0.82rem", color: P.textPrimary, fontWeight: 600 }}>
+                            {card.minute} · {card.player} ({card.team})
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2" style={{ fontSize: "0.8rem", color: P.default, fontWeight: 500 }}>
+                        Sin tarjetas rojas.
+                      </p>
+                    )}
                   </div>
                 </div>
 

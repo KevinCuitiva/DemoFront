@@ -98,14 +98,31 @@ interface Notification {
 
 const initialNotifs: Notification[] = [
   {
-    id: 4,
-    type: "payment",
-    team: "TECHCUP 2026",
-    captain: "Administración",
-    time: "Hace 10 min",
+    id: 1,
+    type: "invite",
+    team: "Equipo Sigma",
+    captain: "María García",
+    time: "Hace 8 min",
     status: "pending",
     read: false,
   },
+];
+
+type RoleType = "jugador" | "capitan";
+
+interface TeamScheduleItem {
+  id: number;
+  date: string;
+  label: string;
+  opponent: string;
+  venue: string;
+  hour: string;
+}
+
+const createTeamSchedule = (teamName: string): TeamScheduleItem[] => [
+  { id: 1, date: "2026-03-18", label: "Fase de grupos", opponent: `${teamName} vs Equipo Nova`, venue: "Cancha Norte", hour: "09:00" },
+  { id: 2, date: "2026-03-22", label: "Fase de grupos", opponent: `${teamName} vs Equipo Delta`, venue: "Cancha Central", hour: "14:00" },
+  { id: 3, date: "2026-03-27", label: "Cuartos de final", opponent: `${teamName} vs Equipo Alpha`, venue: "Cancha Sur", hour: "16:00" },
 ];
 
 // ── Notification Panel ────────────────────────────
@@ -289,7 +306,7 @@ function NotifPanel({
       {/* Footer */}
       <div className="px-5 py-3 border-t border-black/5 bg-[#FAFAFA] text-center">
         <span className="text-xs" style={{ color: P.default, fontWeight: 500 }}>
-          Solo se muestran invitaciones activas del torneo
+          El comprobante de pago se habilita cuando el usuario ya está inscrito en un equipo
         </span>
       </div>
     </motion.div>
@@ -499,7 +516,7 @@ function PaymentModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
+        className="fixed inset-0 z-[70] bg-black/30 backdrop-blur-sm"
       />
 
       {/* Drawer bottom → centered desktop */}
@@ -743,7 +760,7 @@ function PaymentModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
 }
 
 // ── Inscription Modal ─────────────────────────────
-function InscriptionModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+function InscriptionModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (teamName: string) => void }) {
   const [step, setStep] = useState<1 | 2>(1);
   const [teamName, setTeamName] = useState("");
   const [emailInput, setEmailInput] = useState("");
@@ -768,7 +785,7 @@ function InscriptionModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 
   const handleSubmit = () => {
     onClose();
-    onSuccess();
+    onSuccess(teamName.trim());
   };
 
   return (
@@ -788,11 +805,11 @@ function InscriptionModal({ onClose, onSuccess }: { onClose: () => void; onSucce
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 60 }}
         transition={{ type: "spring", stiffness: 320, damping: 30 }}
-        className="fixed bottom-0 left-0 right-0 z-50 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:px-6 pointer-events-none"
+        className="fixed bottom-0 left-0 right-0 z-[71] sm:inset-0 sm:flex sm:items-center sm:justify-center sm:px-6 pointer-events-none"
       >
         <div
           className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden pointer-events-auto"
-          style={{ boxShadow: "0 -8px 60px rgba(0,0,0,0.18)", maxHeight: "92vh" }}
+          style={{ boxShadow: "0 -8px 60px rgba(0,0,0,0.18)", maxHeight: "calc(100dvh - 8px)" }}
         >
           {/* Drag handle (mobile) */}
           <div className="flex justify-center pt-3 pb-1 sm:hidden">
@@ -803,8 +820,8 @@ function InscriptionModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           <div className="h-1.5 w-full mx-0" style={{ background: `linear-gradient(90deg, ${P.primary}, ${P.secondary})` }} />
 
           {/* Scrollable body */}
-          <div className="overflow-y-auto" style={{ maxHeight: "80vh" }}>
-            <div className="px-6 pt-6 pb-8">
+          <div className="overflow-y-auto" style={{ maxHeight: "calc(100dvh - 4.5rem)" }}>
+            <div className="px-6 pt-6" style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}>
 
               {/* ── Captain notice ── */}
               <motion.div
@@ -1161,6 +1178,42 @@ export function Dashboard() {
 
   // Inscription
   const [showInscription, setShowInscription] = useState(false);
+  const [roleInTeam, setRoleInTeam] = useState<RoleType | null>(null);
+  const [teamName, setTeamName] = useState("");
+  const [joinedAt, setJoinedAt] = useState<string | null>(null);
+  const [teamSchedule, setTeamSchedule] = useState<TeamScheduleItem[]>([]);
+  const [dateFilter, setDateFilter] = useState<"all" | "week" | "month">("all");
+
+  const isRegistered = Boolean(roleInTeam && teamName);
+  const hasUploadedPayment = notifs.some((n) => n.type === "payment" && n.status === "uploaded");
+
+  const ensurePaymentNotification = () => {
+    setNotifs((prev) => {
+      const hasPayment = prev.some((n) => n.type === "payment");
+      if (hasPayment) return prev;
+      return [
+        {
+          id: Date.now(),
+          type: "payment",
+          team: "TECHCUP 2026",
+          captain: "Organización",
+          time: "Hace un momento",
+          status: "pending",
+          read: false,
+        },
+        ...prev,
+      ];
+    });
+  };
+
+  const filteredSchedule = teamSchedule.filter((item) => {
+    if (dateFilter === "all") return true;
+    const day = new Date(item.date);
+    const now = new Date("2026-03-15");
+    const diffDays = Math.ceil((day.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (dateFilter === "week") return diffDays <= 7;
+    return diffDays <= 31;
+  });
 
   const unreadCount = notifs.filter((n) => !n.read).length;
 
@@ -1194,6 +1247,11 @@ export function Dashboard() {
         n.id === selectedNotif.id ? { ...n, status: "accepted", read: true } : n
       )
     );
+    setRoleInTeam("jugador");
+    setTeamName(selectedNotif.team);
+    setJoinedAt("2026-03-15");
+    setTeamSchedule(createTeamSchedule(selectedNotif.team));
+    ensurePaymentNotification();
     setSelectedNotif(null);
     setNotifOpen(false);
     showToast(`¡Bienvenido a ${selectedNotif.team}!`, P.success);
@@ -1297,7 +1355,15 @@ export function Dashboard() {
                     <NotifPanel
                       notifs={notifs}
                       onClose={() => setNotifOpen(false)}
-                      onSelectNotif={(n) => { setSelectedNotif(n); setNotifOpen(false); }}
+                      onSelectNotif={(n) => {
+                        if (n.type === "payment" && !isRegistered) {
+                          setNotifOpen(false);
+                          showToast("Debes estar inscrito en el torneo para subir comprobante", P.secondary);
+                          return;
+                        }
+                        setSelectedNotif(n);
+                        setNotifOpen(false);
+                      }}
                       onMarkRead={handleMarkRead}
                     />
                   </>
@@ -1365,7 +1431,14 @@ export function Dashboard() {
         {showInscription && (
           <InscriptionModal
             onClose={() => setShowInscription(false)}
-            onSuccess={() => showToast("¡Equipo inscrito exitosamente en TECHCUP!", P.success)}
+            onSuccess={(createdTeamName) => {
+              setRoleInTeam("capitan");
+              setTeamName(createdTeamName);
+              setJoinedAt("2026-03-15");
+              setTeamSchedule(createTeamSchedule(createdTeamName));
+              ensurePaymentNotification();
+              showToast("¡Equipo inscrito exitosamente en TECHCUP!", P.success);
+            }}
           />
         )}
       </AnimatePresence>
@@ -1557,11 +1630,102 @@ export function Dashboard() {
           })}
         </div>
 
-        {/* ── Section label: Únete ── */}
+        {/* ── Section label: Mi equipo ── */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.50, duration: 0.4 }}
+          className="flex items-center gap-3 mb-4"
+        >
+          <div className="w-1 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: P.primary }} />
+          <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.15em", color: P.primary, textTransform: "uppercase" }}>
+            Mi Equipo
+          </span>
+          <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(184,28,28,0.2), transparent)" }} />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.52, duration: 0.4 }}
+          className="bg-white rounded-[20px] p-5 mb-6"
+          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+        >
+          {!isRegistered ? (
+            <p style={{ fontSize: "0.84rem", color: P.default, fontWeight: 500 }}>
+              Aún no perteneces a un equipo. Inscríbete o acepta una invitación para ver información del equipo y fechas de juego.
+            </p>
+          ) : (
+            <>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <p style={{ fontSize: "0.92rem", fontWeight: 700, color: P.textPrimary }}>{teamName}</p>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 600, color: P.default }}>
+                    Rol: {roleInTeam === "capitan" ? "Capitán" : "Jugador"} · Inscrito: {joinedAt}
+                  </p>
+                </div>
+                <span
+                  className="text-xs px-2.5 py-1 rounded-full"
+                  style={{
+                    backgroundColor: hasUploadedPayment ? `${P.success}18` : `${P.secondary}18`,
+                    color: hasUploadedPayment ? P.success : P.secondary,
+                    fontWeight: 700,
+                  }}
+                >
+                  {hasUploadedPayment ? "Pago enviado" : "Pago pendiente"}
+                </span>
+              </div>
+
+              <div className="flex gap-2 mb-4">
+                {[
+                  { id: "all", label: "Todas" },
+                  { id: "week", label: "7 días" },
+                  { id: "month", label: "30 días" },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setDateFilter(option.id as "all" | "week" | "month")}
+                    className="px-3 py-1.5 rounded-lg text-xs"
+                    style={{
+                      backgroundColor: dateFilter === option.id ? `${P.info}16` : "#F4F4F5",
+                      color: dateFilter === option.id ? P.info : P.default,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                {filteredSchedule.length === 0 ? (
+                  <p style={{ fontSize: "0.78rem", color: P.default, fontWeight: 500 }}>
+                    No hay partidos programados para el filtro seleccionado.
+                  </p>
+                ) : (
+                  filteredSchedule.map((item) => (
+                    <div
+                      key={item.id}
+                      className="border rounded-xl px-3 py-2"
+                      style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                    >
+                      <p style={{ fontSize: "0.77rem", fontWeight: 700, color: P.textPrimary }}>{item.opponent}</p>
+                      <p style={{ fontSize: "0.72rem", color: P.default, fontWeight: 500 }}>
+                        {item.label} · {item.date} · {item.hour} · {item.venue}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+        </motion.div>
+
+        {/* ── Section label: Únete ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.53, duration: 0.4 }}
           className="flex items-center gap-3 mb-4"
         >
           <div className="w-1 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: P.primary }} />
@@ -1578,9 +1742,9 @@ export function Dashboard() {
           transition={{ delay: 0.54, duration: 0.45 }}
           whileHover={{ y: -4, boxShadow: "0 16px 44px rgba(196,132,29,0.30)" }}
           whileTap={{ scale: 0.990 }}
-          onClick={() => setShowInscription(true)}
+          onClick={() => !isRegistered && setShowInscription(true)}
           className="w-full flex items-center gap-4 bg-white rounded-[20px] px-5 py-5 cursor-pointer text-left relative overflow-hidden transition-all duration-300"
-          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)", opacity: isRegistered ? 0.7 : 1 }}
         >
           {/* Left gold stripe */}
           <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-[20px]" style={{ background: "linear-gradient(to bottom, #C4841D, #A86A14)" }} />
@@ -1604,7 +1768,9 @@ export function Dashboard() {
               Inscripción al Torneo
             </p>
             <p className="mt-1" style={{ fontSize: "0.79rem", color: P.default, fontWeight: 400, lineHeight: 1.45 }}>
-              Crea tu equipo e invita a tus compañeros
+              {isRegistered
+                ? "Ya estás inscrito en un equipo para este torneo"
+                : "Crea tu equipo e invita a tus compañeros"}
             </p>
           </div>
 
@@ -1613,7 +1779,9 @@ export function Dashboard() {
             className="relative z-10 flex-shrink-0 px-3.5 py-1.5 rounded-full hidden sm:flex items-center"
             style={{ background: "rgba(196,132,29,0.10)", border: "1px solid rgba(196,132,29,0.28)" }}
           >
-            <span style={{ fontSize: "0.73rem", fontWeight: 700, color: P.secondary }}>Inscribirme</span>
+            <span style={{ fontSize: "0.73rem", fontWeight: 700, color: P.secondary }}>
+              {isRegistered ? "Inscrito" : "Inscribirme"}
+            </span>
           </div>
 
           {/* Arrow */}

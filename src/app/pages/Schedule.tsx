@@ -17,39 +17,39 @@ const upcomingDates = [
     date: "5 Mar",
     weekday: "Jueves",
     events: [
-      { time: "09:00", name: "Cuartos de Final – Grupo A", venue: "Sala Principal" },
-      { time: "14:00", name: "Cuartos de Final – Grupo B", venue: "Arena Central" },
+      { time: "09:00", name: "Cuartos de Final", venue: "Sala Principal", teams: "Equipo Alpha vs Equipo Sigma" },
+      { time: "14:00", name: "Cuartos de Final", venue: "Arena Central", teams: "Equipo Nova vs Equipo Delta" },
     ],
   },
   {
     date: "7 Mar",
     weekday: "Sábado",
     events: [
-      { time: "10:00", name: "Semifinal 1", venue: "Sala Principal" },
-      { time: "16:00", name: "Semifinal 2", venue: "Sala Principal" },
+      { time: "10:00", name: "Semifinal 1", venue: "Sala Principal", teams: "Ganador QF1 vs Ganador QF2" },
+      { time: "16:00", name: "Semifinal 2", venue: "Sala Principal", teams: "Ganador QF3 vs Ganador QF4" },
     ],
   },
   {
     date: "9 Mar",
     weekday: "Lunes",
     events: [
-      { time: "11:00", name: "Tercer Puesto", venue: "Arena Sur" },
-      { time: "18:00", name: "Gran Final", venue: "Arena Central" },
+      { time: "11:00", name: "Tercer Puesto", venue: "Arena Sur", teams: "Perdedor SF1 vs Perdedor SF2" },
+      { time: "18:00", name: "Gran Final", venue: "Arena Central", teams: "Ganador SF1 vs Ganador SF2" },
     ],
   },
   {
     date: "12 Mar",
     weekday: "Jueves",
     events: [
-      { time: "10:00", name: "Torneo Relámpago – Fase 1", venue: "Sala Norte" },
+      { time: "10:00", name: "Torneo Relámpago – Fase 1", venue: "Sala Norte", teams: "Leones FC vs Titanes" },
     ],
   },
   {
     date: "15 Mar",
     weekday: "Domingo",
     events: [
-      { time: "09:00", name: "Torneo Relámpago – Final", venue: "Arena Central" },
-      { time: "19:00", name: "Ceremonia de Premiación", venue: "Auditorio Principal" },
+      { time: "09:00", name: "Torneo Relámpago – Final", venue: "Arena Central", teams: "Async Avengers vs Boolean FC" },
+      { time: "19:00", name: "Ceremonia de Premiación", venue: "Auditorio Principal", teams: "Todos los equipos" },
     ],
   },
 ];
@@ -172,7 +172,7 @@ export function Schedule() {
                   <motion.div
                     key={eventIndex}
                     whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.09)" }}
-                    className="flex items-center justify-between bg-white rounded-[20px] px-3 sm:px-5 py-3 sm:py-4 cursor-pointer transition-all duration-300"
+                    className="flex items-center bg-white rounded-[20px] px-3 sm:px-5 py-3 sm:py-4 transition-all duration-300"
                     style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
                   >
                     <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 pr-2">
@@ -188,19 +188,14 @@ export function Schedule() {
                         <p style={{ fontSize: "0.8rem", fontWeight: 700, color: P.textPrimary }} className="truncate sm:text-[0.88rem]">
                           {event.name}
                         </p>
+                        <p style={{ fontSize: "0.7rem", color: P.info, fontWeight: 600 }} className="truncate sm:text-[0.75rem]">
+                          {event.teams}
+                        </p>
                         <div className="flex items-center gap-1 mt-0.5">
                           <MapPin style={{ width: 9, height: 9, color: P.default }} className="sm:w-[10px] sm:h-[10px] flex-shrink-0" />
                           <p style={{ fontSize: "0.7rem", color: P.default, fontWeight: 500 }} className="truncate sm:text-[0.75rem]">{event.venue}</p>
                         </div>
                       </div>
-                    </div>
-                    <div
-                      className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${P.secondary}10` }}
-                    >
-                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" className="sm:w-3 sm:h-3">
-                        <path d="M6 4l4 4-4 4" stroke={P.secondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
                     </div>
                   </motion.div>
                 ))}

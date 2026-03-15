@@ -10,8 +10,8 @@ export function MobileNav() {
   useEffect(() => {
     if (location.pathname.startsWith("/dashboard-arbitro")) {
       sessionStorage.setItem("userContext", "arbitro");
-    } else if (location.pathname.startsWith("/dashboard-admin") || location.pathname.startsWith("/admin/")) {
-      sessionStorage.setItem("userContext", "admin");
+    } else if (location.pathname.startsWith("/dashboard-organizer") || location.pathname.startsWith("/organizer/")) {
+      sessionStorage.setItem("userContext", "organizer");
     } else if (location.pathname === "/dashboard") {
       sessionStorage.setItem("userContext", "user");
     }
@@ -20,18 +20,18 @@ export function MobileNav() {
   // Obtener el contexto guardado
   const savedContext = sessionStorage.getItem("userContext");
   const isArbitroContext = savedContext === "arbitro" || location.pathname.startsWith("/dashboard-arbitro");
-  const isAdminContext = savedContext === "admin" || location.pathname.startsWith("/dashboard-admin") || location.pathname.startsWith("/admin/");
+  const isOrganizerContext = savedContext === "organizer" || location.pathname.startsWith("/dashboard-organizer") || location.pathname.startsWith("/organizer/");
   
   let dashboardPath = "/dashboard";
   if (isArbitroContext) dashboardPath = "/dashboard-arbitro";
-  if (isAdminContext) dashboardPath = "/dashboard-admin";
+  if (isOrganizerContext) dashboardPath = "/dashboard-organizer";
 
   // Diferentes items de navegación según el contexto
-  const navItems = isAdminContext
+  const navItems = isOrganizerContext
     ? [
         { path: dashboardPath, icon: LayoutDashboard, label: "Inicio" },
-        { path: "/admin/tournaments", icon: FolderKanban, label: "Torneos" },
-        { path: "/admin/create-tournament", icon: PlusCircle, label: "Crear" },
+        { path: "/organizer/tournaments", icon: FolderKanban, label: "Torneos" },
+        { path: "/organizer/create-tournament", icon: PlusCircle, label: "Crear" },
         { path: "/profile", icon: User, label: "Perfil" },
       ]
     : isArbitroContext
@@ -81,14 +81,14 @@ export function MobileNav() {
                   className={`p-2.5 rounded-xl transition-colors duration-300`}
                   style={{
                     backgroundColor: isActive
-                      ? isAdminContext
+                      ? isOrganizerContext
                         ? "#17C964"
                         : isArbitroContext
                         ? "#C4841D"
                         : "#B81C1C"
                       : "transparent",
                     boxShadow: isActive
-                      ? isAdminContext
+                      ? isOrganizerContext
                         ? "0 4px 16px rgba(23,201,100,0.25)"
                         : isArbitroContext
                         ? "0 4px 16px rgba(196,132,29,0.25)"
@@ -106,7 +106,7 @@ export function MobileNav() {
                   className={`text-xs transition-colors duration-300`}
                   style={{
                     color: isActive
-                      ? isAdminContext
+                      ? isOrganizerContext
                         ? "#17C964"
                         : isArbitroContext
                         ? "#C4841D"

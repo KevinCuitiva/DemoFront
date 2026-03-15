@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Coffee,
   Timer,
+  User,
 } from "lucide-react";
 
 // ── Palette ───────────────────────────────────────
@@ -81,6 +82,14 @@ const eventDefs: EventDef[] = [
 
 type TeamKey = "a" | "b";
 type MatchState = "no-iniciado" | "en-curso" | "finalizado";
+
+interface EventLogItem {
+  id: number;
+  team: TeamKey;
+  type: EventType;
+  actor: string;
+  minute: string;
+}
 
 type Counters = Record<EventType, number>;
 
@@ -316,6 +325,71 @@ function Toast({ msg, color }: { msg: string; color: string }) {
   );
 }
 
+function ActorPickerModal({
+  title,
+  players,
+  onPick,
+  onClose,
+}: {
+  title: string;
+  players: string[];
+  onPick: (player: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        transition={{ type: "spring", stiffness: 360, damping: 28 }}
+        className="fixed inset-0 z-50 flex items-center justify-center px-6 pointer-events-none"
+      >
+        <div
+          className="bg-white rounded-[20px] p-6 max-w-sm w-full pointer-events-auto"
+          style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.18)" }}
+        >
+          <h3 className="text-base mb-1" style={{ fontWeight: 800, color: P.textPrimary }}>
+            Seleccionar jugador
+          </h3>
+          <p className="text-xs mb-4" style={{ color: P.default, fontWeight: 500 }}>{title}</p>
+
+          <div className="space-y-2 mb-4">
+            {players.map((player) => (
+              <button
+                key={player}
+                onClick={() => onPick(player)}
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left"
+                style={{ borderColor: "rgba(0,0,0,0.08)" }}
+              >
+                <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: `${P.info}14` }}>
+                  <User className="w-4 h-4" style={{ color: P.info }} />
+                </div>
+                <span style={{ fontSize: "0.84rem", fontWeight: 600, color: P.textPrimary }}>{player}</span>
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl"
+            style={{ backgroundColor: "rgba(0,0,0,0.06)", color: P.default, fontWeight: 700, fontSize: "0.82rem" }}
+          >
+            Cancelar
+          </button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 // ── MatchDetail ───────────────────────────────────
 export function MatchDetail() {
   const { id } = useParams<{ id: string }>();
@@ -347,6 +421,14 @@ export function MatchDetail() {
 
   const [toast, setToast] = useState<{ msg: string; color: string } | null>(null);
   const [confirmModal, setConfirmModal] = useState<null | "finalizar">(null);
+  const [eventLog, setEventLog] = useState<EventLogItem[]>([]);
+  const [actorPicker, setActorPicker] = useState<null | { team: TeamKey; type: EventType }>(null);
+  const [recentActionsOpen, setRecentActionsOpen] = useState(false);
+
+  const teamActors: Record<TeamKey, string[]> = {
+    a: ["Luis Torres", "Andrés Gil", "Mateo Díaz", "Juan Ríos"],
+    b: ["Daniel Mora", "Carlos Ruiz", "Jhon Pérez", "Sergio León"],
+  };
 
   // Pre-load if already en-curso
   useEffect(() => {
@@ -428,7 +510,7 @@ export function MatchDetail() {
     showToast("Partido finalizado correctamente", P.primary);
   };
 
-  const registerEvent = (team: TeamKey, type: EventType) => {
+  const registerEvent = (team: TeamKey, type: EventType, actor: string) => {
     if (matchState !== "en-curso") return;
     const teamName = team === "a" ? (match?.teamA ?? "Equipo A") : (match?.teamB ?? "Equipo B");
     setCounters((prev) => ({
@@ -438,12 +520,23 @@ export function MatchDetail() {
     if (type === "gol") {
       setScore((prev) => ({ ...prev, [team]: prev[team] + 1 }));
     }
+    setEventLog((prev) => [
+      {
+        id: Date.now(),
+        team,
+        type,
+        actor,
+        minute: `${minute}:${String(seconds).padStart(2, "0")}`,
+      },
+      ...prev,
+    ]);
     const def = eventDefs.find((d) => d.type === type)!;
-    showToast(`${def.label} registrado — ${teamName}`, def.color);
+    showToast(`${def.label} registrado — ${teamName} (${actor})`, def.color);
   };
 
   const removeEvent = (team: TeamKey, type: EventType) => {
     if (matchState !== "en-curso") return;
+    if (type !== "gol") return;
     setCounters((prev) => ({
       ...prev,
       [team]: { ...prev[team], [type]: Math.max(0, prev[team][type] - 1) },
@@ -451,6 +544,11 @@ export function MatchDetail() {
     if (type === "gol") {
       setScore((prev) => ({ ...prev, [team]: Math.max(0, prev[team] - 1) }));
     }
+    setEventLog((prev) => {
+      const removeIndex = prev.findIndex((e) => e.team === team && e.type === type);
+      if (removeIndex === -1) return prev;
+      return prev.filter((_, idx) => idx !== removeIndex);
+    });
   };
 
   if (!match) {
@@ -481,6 +579,20 @@ export function MatchDetail() {
       <AnimatePresence>
         {halfTimeOpen && (
           <HalfTimeModal seconds={halfTimeSeconds} onResume={handleResume} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {actorPicker && (
+          <ActorPickerModal
+            title={`${eventDefs.find((d) => d.type === actorPicker.type)?.label} · ${actorPicker.team === "a" ? match.teamA : match.teamB}`}
+            players={teamActors[actorPicker.team]}
+            onPick={(actor) => {
+              registerEvent(actorPicker.team, actorPicker.type, actor);
+              setActorPicker(null);
+            }}
+            onClose={() => setActorPicker(null)}
+          />
         )}
       </AnimatePresence>
 
@@ -666,18 +778,20 @@ export function MatchDetail() {
                       </span>
 
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <motion.button
-                          whileTap={{ scale: 0.88 }}
-                          onClick={() => removeEvent(team, def.type)}
-                          disabled={matchState !== "en-curso" || count === 0}
-                          className="w-5 h-5 rounded-md flex items-center justify-center"
-                          style={{
-                            backgroundColor: count > 0 && matchState === "en-curso" ? "rgba(0,0,0,0.06)" : "transparent",
-                            opacity: count === 0 || matchState !== "en-curso" ? 0.3 : 1,
-                          }}
-                        >
-                          <Minus className="w-3 h-3" style={{ color: P.default }} />
-                        </motion.button>
+                        {def.type === "gol" && (
+                          <motion.button
+                            whileTap={{ scale: 0.88 }}
+                            onClick={() => removeEvent(team, def.type)}
+                            disabled={matchState !== "en-curso" || count === 0}
+                            className="w-5 h-5 rounded-md flex items-center justify-center"
+                            style={{
+                              backgroundColor: count > 0 && matchState === "en-curso" ? "rgba(0,0,0,0.06)" : "transparent",
+                              opacity: count === 0 || matchState !== "en-curso" ? 0.3 : 1,
+                            }}
+                          >
+                            <Minus className="w-3 h-3" style={{ color: P.default }} />
+                          </motion.button>
+                        )}
 
                         <span
                           className="w-5 text-center"
@@ -689,7 +803,7 @@ export function MatchDetail() {
                         <motion.button
                           whileHover={{ scale: 1.12 }}
                           whileTap={{ scale: 0.88 }}
-                          onClick={() => registerEvent(team, def.type)}
+                          onClick={() => setActorPicker({ team, type: def.type })}
                           disabled={matchState !== "en-curso"}
                           className="w-6 h-6 rounded-lg flex items-center justify-center text-white flex-shrink-0"
                           style={{
@@ -707,6 +821,60 @@ export function MatchDetail() {
               </div>
             </div>
           ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.16, duration: 0.35 }}
+          className="bg-white rounded-[20px] p-4 mb-6"
+          style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.06)" }}
+        >
+          <button
+            onClick={() => setRecentActionsOpen((prev) => !prev)}
+            className="w-full flex items-center justify-between"
+          >
+            <p style={{ fontSize: "0.72rem", fontWeight: 700, color: P.default, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Acciones recientes con actor
+            </p>
+            <motion.div
+              animate={{ rotate: recentActionsOpen ? 90 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronRight className="w-4 h-4" style={{ color: P.default }} />
+            </motion.div>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {recentActionsOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="mt-3 space-y-2 overflow-hidden"
+              >
+                {eventLog.length === 0 ? (
+                  <p style={{ fontSize: "0.8rem", color: P.default, fontWeight: 500 }}>
+                    Aún no hay acciones registradas.
+                  </p>
+                ) : (
+                  eventLog.slice(0, 6).map((entry) => {
+                    const def = eventDefs.find((d) => d.type === entry.type)!;
+                    const teamLabel = entry.team === "a" ? match.teamA : match.teamB;
+                    return (
+                      <div key={entry.id} className="flex items-center justify-between rounded-xl px-3 py-2" style={{ backgroundColor: "#F8F8FA" }}>
+                        <p style={{ fontSize: "0.78rem", color: P.textPrimary, fontWeight: 600 }}>
+                          {def.label} · {entry.actor} · {teamLabel}
+                        </p>
+                        <span style={{ fontSize: "0.72rem", color: P.default, fontWeight: 600 }}>{entry.minute}</span>
+                      </div>
+                    );
+                  })
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* Spacer for mobile to ensure scroll space */}

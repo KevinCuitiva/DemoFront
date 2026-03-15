@@ -137,6 +137,7 @@ export function ManageTournaments() {
   const [tournaments, setTournaments] = useState<Tournament[]>(mockTournaments);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState<Tournament | null>(null);
+  const [originalEditForm, setOriginalEditForm] = useState<Tournament | null>(null);
 
   const getStatusColor = (status: Tournament["status"]) => {
     switch (status) {
@@ -177,14 +178,35 @@ export function ManageTournaments() {
   const handleEditTournament = (tournament: Tournament) => {
 
     setEditForm({ ...tournament });
+    setOriginalEditForm({ ...tournament });
     setShowEditModal(true);
   };
 
   const handleSaveTournament = () => {
     if (!editForm) return;
+    const shouldSave = window.confirm("¿Deseas guardar los cambios del torneo?");
+    if (!shouldSave) return;
     setTournaments((prev) => prev.map((t) => (t.id === editForm.id ? editForm : t)));
     setShowEditModal(false);
     setEditForm(null);
+    setOriginalEditForm(null);
+    window.alert("Cambios guardados correctamente.");
+  };
+
+  const handleDiscardTournamentChanges = () => {
+    if (!editForm) {
+      setShowEditModal(false);
+      return;
+    }
+    const hasChanges = JSON.stringify(editForm) !== JSON.stringify(originalEditForm);
+    if (hasChanges) {
+      const shouldDiscard = window.confirm("¿Deseas descartar los cambios del torneo?");
+      if (!shouldDiscard) return;
+      window.alert("Cambios descartados.");
+    }
+    setShowEditModal(false);
+    setEditForm(null);
+    setOriginalEditForm(null);
   };
 
   const toggleSchedule = (schedule: string) => {
@@ -251,7 +273,7 @@ export function ManageTournaments() {
           >
             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: P.success }} />
             <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", color: P.success, textTransform: "uppercase" }}>
-              Administrador
+              Organizador
             </span>
           </div>
 
@@ -287,7 +309,7 @@ export function ManageTournaments() {
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
-          onClick={() => navigate("/dashboard-admin")}
+          onClick={() => navigate("/dashboard-organizer")}
           className="flex items-center gap-2 mb-6 text-sm group"
           style={{ color: P.default, fontWeight: 600 }}
         >
@@ -397,9 +419,36 @@ export function ManageTournaments() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-5">
+                <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#F8FAFC" }}>
+                  <p style={{ fontSize: "0.68rem", color: P.default, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Capacidad
+                  </p>
+                  <p style={{ fontSize: "0.82rem", color: P.textPrimary, fontWeight: 700 }}>
+                    {tournament.teams}/{tournament.maxTeams ?? "-"} equipos
+                  </p>
+                </div>
+                <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#F8FAFC" }}>
+                  <p style={{ fontSize: "0.68rem", color: P.default, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Jugadores por equipo
+                  </p>
+                  <p style={{ fontSize: "0.82rem", color: P.textPrimary, fontWeight: 700 }}>
+                    {tournament.playersPerTeam ?? "-"}
+                  </p>
+                </div>
+                <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#F8FAFC" }}>
+                  <p style={{ fontSize: "0.68rem", color: P.default, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Costo por equipo
+                  </p>
+                  <p style={{ fontSize: "0.82rem", color: P.textPrimary, fontWeight: 700 }}>
+                    {tournament.costPerTeam ? formatCurrency(tournament.costPerTeam) : "-"}
+                  </p>
+                </div>
+              </div>
+
               {/* Actions */}
               <div className="flex flex-wrap gap-2">
-                <Link to={`/admin/tournaments/${tournament.id}`} className="flex-1 min-w-[140px]">
+                <Link to={`/organizer/tournaments/${tournament.id}`} className="flex-1 min-w-[140px]">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -465,7 +514,7 @@ export function ManageTournaments() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowEditModal(false)}
+              onClick={handleDiscardTournamentChanges}
               className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm"
             />
             <motion.div
@@ -488,7 +537,7 @@ export function ManageTournaments() {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => setShowEditModal(false)}
+                    onClick={handleDiscardTournamentChanges}
                     className="w-10 h-10 rounded-xl flex items-center justify-center"
                     style={{ backgroundColor: "rgba(0,0,0,0.04)" }}
                   >
@@ -674,11 +723,11 @@ export function ManageTournaments() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => setShowEditModal(false)}
+                    onClick={handleDiscardTournamentChanges}
                     className="flex-1 py-3 rounded-xl border border-black/8 text-sm"
                     style={{ fontWeight: 600, color: P.default }}
                   >
-                    Cancelar
+                    Descartar
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}

@@ -11,6 +11,8 @@ import {
   Search,
   Filter,
   FileText,
+  X,
+  Image as ImageIcon,
 } from "lucide-react";
 
 const P = {
@@ -26,26 +28,43 @@ const P = {
   warning: "#F5A524",
 };
 
+type PaymentStatus = "pagado" | "pendiente" | "rechazado";
+
+interface TeamPayment {
+  id: number;
+  nombre: string;
+  decanatura: string;
+  capitan: string;
+  monto: number;
+  estado: PaymentStatus;
+  fecha: string;
+  revisadoPor: string;
+  comprobanteUrl: string | null;
+  comprobanteTipo: "imagen" | "pdf" | null;
+}
+
 // Datos de ejemplo
-const teamsData = [
-  { id: 1, nombre: "Los Compiladores", decanatura: "Ing. Sistemas", capitan: "Juan Pérez", monto: 50000, estado: "pagado", fecha: "2026-02-15" },
-  { id: 2, nombre: "Bug Hunters", decanatura: "Ing. de Inteligencia Artificial", capitan: "María García", monto: 50000, estado: "pagado", fecha: "2026-02-18" },
-  { id: 3, nombre: "Stack Overflow FC", decanatura: "Ing. Industrial", capitan: "Carlos López", monto: 50000, estado: "pendiente", fecha: "-" },
-  { id: 4, nombre: "Null Pointers", decanatura: "Ing. Electrónica", capitan: "Ana Martínez", monto: 50000, estado: "pagado", fecha: "2026-02-20" },
-  { id: 5, nombre: "Recursive United", decanatura: "Ing. Civil", capitan: "Pedro Sánchez", monto: 50000, estado: "pagado", fecha: "2026-02-22" },
-  { id: 6, nombre: "Array Warriors", decanatura: "Ing. de Ciberseguridad", capitan: "Laura Díaz", monto: 50000, estado: "pendiente", fecha: "-" },
-  { id: 7, nombre: "Boolean FC", decanatura: "Administración de Empresas", capitan: "Diego Torres", monto: 50000, estado: "pagado", fecha: "2026-02-25" },
-  { id: 8, nombre: "Async Avengers", decanatura: "Ing. Mecánica", capitan: "Sofia Ruiz", monto: 50000, estado: "rechazado", fecha: "-" },
-  { id: 9, nombre: "Code Masters", decanatura: "Ing. en Biotecnología", capitan: "Miguel Ángel", monto: 50000, estado: "pagado", fecha: "2026-02-28" },
-  { id: 10, nombre: "Dev United", decanatura: "Ing. Biomédica", capitan: "Camila Rojas", monto: 50000, estado: "pendiente", fecha: "-" },
+const teamsData: TeamPayment[] = [
+  { id: 1, nombre: "Los Compiladores", decanatura: "Ing. Sistemas", capitan: "Juan Pérez", monto: 50000, estado: "pagado", fecha: "2026-02-15", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200", comprobanteTipo: "imagen" },
+  { id: 2, nombre: "Bug Hunters", decanatura: "Ing. de Inteligencia Artificial", capitan: "María García", monto: 50000, estado: "pagado", fecha: "2026-02-18", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=1200", comprobanteTipo: "imagen" },
+  { id: 3, nombre: "Stack Overflow FC", decanatura: "Ing. Industrial", capitan: "Carlos López", monto: 50000, estado: "pendiente", fecha: "-", revisadoPor: "-", comprobanteUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", comprobanteTipo: "pdf" },
+  { id: 4, nombre: "Null Pointers", decanatura: "Ing. Electrónica", capitan: "Ana Martínez", monto: 50000, estado: "pagado", fecha: "2026-02-20", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1556740749-887f6717d7e4?w=1200", comprobanteTipo: "imagen" },
+  { id: 5, nombre: "Recursive United", decanatura: "Ing. Civil", capitan: "Pedro Sánchez", monto: 50000, estado: "pagado", fecha: "2026-02-22", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200", comprobanteTipo: "imagen" },
+  { id: 6, nombre: "Array Warriors", decanatura: "Ing. de Ciberseguridad", capitan: "Laura Díaz", monto: 50000, estado: "pendiente", fecha: "-", revisadoPor: "-", comprobanteUrl: null, comprobanteTipo: null },
+  { id: 7, nombre: "Boolean FC", decanatura: "Administración de Empresas", capitan: "Diego Torres", monto: 50000, estado: "pagado", fecha: "2026-02-25", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200", comprobanteTipo: "imagen" },
+  { id: 8, nombre: "Async Avengers", decanatura: "Ing. Mecánica", capitan: "Sofia Ruiz", monto: 50000, estado: "rechazado", fecha: "-", revisadoPor: "Organizador", comprobanteUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", comprobanteTipo: "pdf" },
+  { id: 9, nombre: "Code Masters", decanatura: "Ing. en Biotecnología", capitan: "Miguel Ángel", monto: 50000, estado: "pagado", fecha: "2026-02-28", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=1200", comprobanteTipo: "imagen" },
+  { id: 10, nombre: "Dev United", decanatura: "Ing. Biomédica", capitan: "Camila Rojas", monto: 50000, estado: "pendiente", fecha: "-", revisadoPor: "-", comprobanteUrl: null, comprobanteTipo: null },
 ];
 
 export function PaymentReport() {
   const navigate = useNavigate();
+  const [teams, setTeams] = useState(teamsData);
+  const [selectedTeam, setSelectedTeam] = useState<TeamPayment | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "pagado" | "pendiente" | "rechazado">("all");
 
-  const filteredTeams = teamsData.filter((team) => {
+  const filteredTeams = teams.filter((team) => {
     const matchesSearch = team.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           team.decanatura.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           team.capitan.toLowerCase().includes(searchTerm.toLowerCase());
@@ -53,10 +72,22 @@ export function PaymentReport() {
     return matchesSearch && matchesFilter;
   });
 
-  const totalEquipos = teamsData.length;
-  const equiposPagados = teamsData.filter(t => t.estado === "pagado").length;
-  const equiposPendientes = teamsData.filter(t => t.estado === "pendiente").length;
-  const totalRecaudado = teamsData.filter(t => t.estado === "pagado").reduce((acc, t) => acc + t.monto, 0);
+  const totalEquipos = teams.length;
+  const equiposPagados = teams.filter(t => t.estado === "pagado").length;
+  const equiposPendientes = teams.filter(t => t.estado === "pendiente").length;
+  const totalRecaudado = teams.filter(t => t.estado === "pagado").reduce((acc, t) => acc + t.monto, 0);
+
+  const handleReviewPayment = (id: number, decision: "pagado" | "rechazado") => {
+    setTeams((prev) => prev.map((team) => {
+      if (team.id !== id) return team;
+      return {
+        ...team,
+        estado: decision,
+        fecha: decision === "pagado" ? "2026-03-15" : "-",
+        revisadoPor: "Organizador",
+      };
+    }));
+  };
 
   const handleDownloadReport = () => {
     // Generar CSV
@@ -296,6 +327,9 @@ export function PaymentReport() {
                   <th className="text-left px-6 py-4 text-xs" style={{ fontWeight: 700, color: P.default, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     Fecha
                   </th>
+                  <th className="text-left px-6 py-4 text-xs" style={{ fontWeight: 700, color: P.default, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Revisión
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -307,8 +341,9 @@ export function PaymentReport() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.25 + idx * 0.02 }}
+                      onClick={() => setSelectedTeam(team)}
                       style={{ borderBottom: "1px solid rgba(0,0,0,0.04)" }}
-                      className="hover:bg-gray-50 transition-colors"
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
                     >
                       <td className="px-6 py-4">
                         <p style={{ fontWeight: 600, fontSize: "0.9rem", color: P.textPrimary }}>{team.nombre}</p>
@@ -337,6 +372,30 @@ export function PaymentReport() {
                       <td className="px-6 py-4">
                         <p style={{ fontWeight: 500, fontSize: "0.85rem", color: P.default }}>{team.fecha}</p>
                       </td>
+                      <td className="px-6 py-4">
+                        {team.estado === "pendiente" ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleReviewPayment(team.id, "pagado"); }}
+                              className="px-2.5 py-1 rounded-lg text-xs"
+                              style={{ backgroundColor: `${P.success}18`, color: P.success, fontWeight: 700 }}
+                            >
+                              Aceptar
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleReviewPayment(team.id, "rechazado"); }}
+                              className="px-2.5 py-1 rounded-lg text-xs"
+                              style={{ backgroundColor: `${P.primary}18`, color: P.primary, fontWeight: 700 }}
+                            >
+                              Rechazar
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: "0.75rem", color: P.default, fontWeight: 600 }}>
+                            Revisado por {team.revisadoPor}
+                          </span>
+                        )}
+                      </td>
                     </motion.tr>
                   );
                 })}
@@ -351,6 +410,62 @@ export function PaymentReport() {
           )}
         </motion.div>
       </main>
+
+      {selectedTeam && (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/35 backdrop-blur-sm"
+            onClick={() => setSelectedTeam(null)}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              className="w-full max-w-3xl bg-white rounded-2xl overflow-hidden pointer-events-auto"
+              style={{ boxShadow: "0 24px 72px rgba(0,0,0,0.24)" }}
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                <div>
+                  <p style={{ fontSize: "0.95rem", fontWeight: 700, color: P.textPrimary }}>Comprobante de {selectedTeam.nombre}</p>
+                  <p style={{ fontSize: "0.76rem", fontWeight: 500, color: P.default }}>Capitán: {selectedTeam.capitan}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedTeam(null)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: "#F3F4F6" }}
+                >
+                  <X style={{ width: 18, height: 18, color: P.default }} />
+                </button>
+              </div>
+
+              <div className="p-4 sm:p-5">
+                {!selectedTeam.comprobanteUrl ? (
+                  <div className="h-[320px] rounded-xl border border-dashed flex flex-col items-center justify-center gap-2" style={{ borderColor: "rgba(0,0,0,0.14)" }}>
+                    <ImageIcon style={{ width: 26, height: 26, color: P.default }} />
+                    <p style={{ fontSize: "0.9rem", color: P.textPrimary, fontWeight: 600 }}>Este equipo aún no sube comprobante</p>
+                    <p style={{ fontSize: "0.78rem", color: P.default, fontWeight: 500 }}>Cuando lo suba, aparecerá aquí.</p>
+                  </div>
+                ) : selectedTeam.comprobanteTipo === "pdf" ? (
+                  <iframe
+                    title={`Comprobante ${selectedTeam.nombre}`}
+                    src={selectedTeam.comprobanteUrl}
+                    className="w-full h-[70vh] rounded-xl border"
+                    style={{ borderColor: "rgba(0,0,0,0.1)" }}
+                  />
+                ) : (
+                  <div className="rounded-xl border overflow-hidden" style={{ borderColor: "rgba(0,0,0,0.1)" }}>
+                    <img
+                      src={selectedTeam.comprobanteUrl}
+                      alt={`Comprobante de ${selectedTeam.nombre}`}
+                      className="w-full h-[70vh] object-contain bg-[#F9FAFB]"
+                    />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
