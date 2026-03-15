@@ -84,11 +84,11 @@ const navButtons = [
 ];
 
 // ── Notification types ────────────────────────────
-type NotifStatus = "pending" | "accepted" | "rejected" | "uploaded";
+type NotifStatus = "pending" | "uploaded";
 
 interface Notification {
   id: number;
-  type: "invite" | "payment";
+  type: "payment";
   team: string;
   captain: string;
   time: string;
@@ -96,17 +96,7 @@ interface Notification {
   read: boolean;
 }
 
-const initialNotifs: Notification[] = [
-  {
-    id: 1,
-    type: "invite",
-    team: "Equipo Sigma",
-    captain: "María García",
-    time: "Hace 8 min",
-    status: "pending",
-    read: false,
-  },
-];
+const initialNotifs: Notification[] = [];
 
 type RoleType = "jugador" | "capitan";
 
@@ -204,57 +194,30 @@ function NotifPanel({
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
                 style={{
-                  backgroundColor:
-                    n.type === "payment"
-                      ? n.status === "uploaded" ? `${P.success}18` : `${P.info}18`
-                      : n.status === "accepted"
-                      ? `${P.success}18`
-                      : n.status === "rejected"
-                      ? `${P.default}18`
-                      : `${P.secondary}18`,
+                  backgroundColor: n.status === "uploaded" ? `${P.success}18` : `${P.info}18`,
                 }}
               >
-                {n.type === "payment" ? (
-                  <CreditCard
-                    className="w-5 h-5"
-                    style={{ color: n.status === "uploaded" ? P.success : P.info }}
-                  />
-                ) : (
-                  <Users
-                    className="w-5 h-5"
-                    style={{
-                      color:
-                        n.status === "accepted"
-                          ? P.success
-                          : n.status === "rejected"
-                          ? P.default
-                          : P.secondary,
-                    }}
-                  />
-                )}
+                <CreditCard
+                  className="w-5 h-5"
+                  style={{ color: n.status === "uploaded" ? P.success : P.info }}
+                />
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0 pr-4">
                 <p className="text-sm leading-snug" style={{ fontWeight: 600 }}>
-                  {n.type === "payment"
-                    ? n.status === "uploaded"
-                      ? "Comprobante enviado correctamente"
-                      : "Bienvenido al torneo · Comprobante de pago"
-                    : n.status === "accepted"
-                    ? `¡Te uniste a ${n.team}!`
-                    : n.status === "rejected"
-                    ? `Invitación de ${n.team} rechazada`
-                    : `¡Felicidades! Has sido invitado a hacer parte de un equipo`}
+                  {n.status === "uploaded"
+                    ? "Comprobante enviado correctamente"
+                    : "Bienvenido al torneo · Comprobante de pago"}
                 </p>
                 <p className="text-xs mt-1" style={{ color: P.default, fontWeight: 500 }}>
-                  {n.type === "payment" ? `${n.team} · ${n.captain}` : `${n.team} · Cap. ${n.captain}`}
+                  {`${n.team} · ${n.captain}`}
                 </p>
                 <div className="flex items-center justify-between mt-1.5">
                   <span className="text-[11px]" style={{ color: P.default, fontWeight: 500 }}>
                     {n.time}
                   </span>
-                  {n.type === "payment" && n.status === "pending" && (
+                  {n.status === "pending" && (
                     <span
                       className="text-[11px] flex items-center gap-0.5"
                       style={{ color: P.info, fontWeight: 700 }}
@@ -263,37 +226,12 @@ function NotifPanel({
                       <ChevronRight className="w-3 h-3" />
                     </span>
                   )}
-                  {n.type === "payment" && n.status === "uploaded" && (
+                  {n.status === "uploaded" && (
                     <span
                       className="text-[11px] flex items-center gap-1"
                       style={{ color: P.success, fontWeight: 700 }}
                     >
                       <Check className="w-3 h-3" /> Enviado
-                    </span>
-                  )}
-                  {n.type === "invite" && n.status === "pending" && (
-                    <span
-                      className="text-[11px] flex items-center gap-0.5"
-                      style={{ color: P.secondary, fontWeight: 700 }}
-                    >
-                      Ver invitación
-                      <ChevronRight className="w-3 h-3" />
-                    </span>
-                  )}
-                  {n.type === "invite" && n.status === "accepted" && (
-                    <span
-                      className="text-[11px] flex items-center gap-1"
-                      style={{ color: P.success, fontWeight: 700 }}
-                    >
-                      <Check className="w-3 h-3" /> Aceptada
-                    </span>
-                  )}
-                  {n.type === "invite" && n.status === "rejected" && (
-                    <span
-                      className="text-[11px] flex items-center gap-1"
-                      style={{ color: P.default, fontWeight: 700 }}
-                    >
-                      <X className="w-3 h-3" /> Rechazada
                     </span>
                   )}
                 </div>
@@ -313,166 +251,12 @@ function NotifPanel({
   );
 }
 
-// ── Invite Confirm Modal ──────────────────────────
-function InviteModal({
-  notif,
-  onAccept,
-  onReject,
-  onClose,
-}: {
-  notif: Notification;
-  onAccept: () => void;
-  onReject: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <>
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 z-50 bg-black/25 backdrop-blur-sm"
-      />
-
-      {/* Dialog */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 24 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 24 }}
-        transition={{ type: "spring", stiffness: 360, damping: 28 }}
-        className="fixed inset-0 z-50 flex items-center justify-center px-6 pointer-events-none"
-      >
-        <div
-          className="bg-white rounded-3xl w-full max-w-sm pointer-events-auto overflow-hidden"
-          style={{ boxShadow: "0 32px 80px rgba(0,0,0,0.18)" }}
-        >
-          {/* Colored top band */}
-          <div className="h-1.5 w-full" style={{ backgroundColor: P.secondary }} />
-
-          <div className="p-8">
-            {/* Trophy icon */}
-            <motion.div
-              initial={{ scale: 0, rotate: -20 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
-              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-              style={{ backgroundColor: `${P.secondary}18` }}
-            >
-              <Users className="w-8 h-8" style={{ color: P.secondary }} />
-            </motion.div>
-
-            {/* Text */}
-            <div className="text-center mb-6">
-              <p
-                className="text-xs uppercase tracking-widest mb-2"
-                style={{ fontWeight: 700, color: P.secondary }}
-              >
-                Invitación al Torneo
-              </p>
-              <h2 className="text-xl text-black mb-3" style={{ fontWeight: 700 }}>
-                ¡Has sido invitado!
-              </h2>
-              <p className="text-sm" style={{ color: "#6C757D", fontWeight: 500 }}>
-                Felicidades, has sido invitado a hacer parte de un equipo en TECHCUP.
-              </p>
-            </div>
-
-            {/* Team card */}
-            <div
-              className="rounded-2xl p-4 mb-6 border"
-              style={{
-                backgroundColor: `${P.primary}06`,
-                borderColor: `${P.primary}20`,
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${P.primary}15` }}
-                >
-                  <span className="text-lg" style={{ fontWeight: 800, color: P.primary }}>
-                    {notif.team.charAt(notif.team.lastIndexOf(" ") + 1)}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-base" style={{ fontWeight: 700 }}>
-                    {notif.team}
-                  </p>
-                  <p className="text-xs" style={{ color: P.default, fontWeight: 500 }}>
-                    Capitán: {notif.captain}
-                  </p>
-                </div>
-                <div className="ml-auto">
-                  <span
-                    className="text-xs px-2.5 py-1 rounded-full"
-                    style={{
-                      backgroundColor: `${P.secondary}18`,
-                      color: P.secondary,
-                      fontWeight: 700,
-                    }}
-                  >
-                    TECHCUP 2026
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Info row */}
-            <div
-              className="flex items-center gap-2 px-4 py-3 rounded-xl mb-6"
-              style={{ backgroundColor: `${P.info}10` }}
-            >
-              <Info className="w-4 h-4 flex-shrink-0" style={{ color: P.info }} />
-              <p className="text-xs" style={{ color: P.info, fontWeight: 500 }}>
-                Al aceptar, quedarás registrado como integrante oficial de {notif.team} para el torneo.
-              </p>
-            </div>
-
-            {/* Buttons */}
-            <div className="flex gap-3">
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={onReject}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-black/8 text-sm"
-                style={{ fontWeight: 600, color: "#6C757D" }}
-              >
-                <X className="w-4 h-4" />
-                Rechazar
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.03, y: -1 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={onAccept}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white text-sm shadow-lg"
-                style={{
-                  backgroundColor: P.success,
-                  fontWeight: 700,
-                  boxShadow: `0 8px 24px ${P.success}40`,
-                }}
-              >
-                <Check className="w-4 h-4" />
-                Aceptar
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </>
-  );
-}
-
 // ── Payment Modal ─────────────────────────────────
 function PaymentModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [file, setFile] = useState<File | null>(null);
-  const [dragging, setDragging] = useState(false);
   const [sending, setSending] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
+  const [fileError, setFileError] = useState("");
+  const acceptedFormats = ["image/png", "image/jpeg", "application/pdf"];
 
   const getIcon = () => {
     if (!file) return null;
@@ -486,16 +270,21 @@ function PaymentModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const pickFile = (f: File) => {
-    if (!ACCEPTED.includes(f.type)) return;
-    setFile(f);
-  };
+  const handleFileSelected = (selectedFile: File | null) => {
+    if (!selectedFile) return;
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const f = e.dataTransfer.files[0];
-    if (f) pickFile(f);
+    if (!acceptedFormats.includes(selectedFile.type)) {
+      setFileError("Solo se permiten archivos PNG, JPG o PDF");
+      return;
+    }
+
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setFileError("El archivo debe pesar máximo 10 MB");
+      return;
+    }
+
+    setFile(selectedFile);
+    setFileError("");
   };
 
   const handleSend = () => {
@@ -516,7 +305,7 @@ function PaymentModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 z-[70] bg-black/30 backdrop-blur-sm"
+        className="fixed inset-0 z-[80] bg-black/30 backdrop-blur-sm"
       />
 
       {/* Drawer bottom → centered desktop */}
@@ -525,7 +314,7 @@ function PaymentModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 60 }}
         transition={{ type: "spring", stiffness: 320, damping: 30 }}
-        className="fixed bottom-0 left-0 right-0 z-50 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:px-6 pointer-events-none"
+        className="fixed bottom-0 left-0 right-0 z-[81] sm:inset-0 sm:flex sm:items-center sm:justify-center sm:px-6 pointer-events-none"
       >
         <div
           className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl overflow-hidden pointer-events-auto flex flex-col"
@@ -599,78 +388,63 @@ function PaymentModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
                 </span>
               </div>
 
-              {/* Drop zone */}
-              <motion.div
-                animate={{
-                  borderColor: dragging ? P.info : file ? P.success : "#E9ECEF",
-                  backgroundColor: dragging ? `${P.info}08` : file ? `${P.success}08` : "#FAFAFA",
+              {/* Inline receipt selection */}
+              <div
+                className="rounded-2xl border p-4 mb-4"
+                style={{
+                  borderColor: file ? `${P.success}30` : "#E9ECEF",
+                  backgroundColor: file ? `${P.success}08` : "#FAFAFA",
                 }}
-                transition={{ duration: 0.2 }}
-                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={handleDrop}
-                onClick={() => !file && inputRef.current?.click()}
-                className="rounded-2xl border-2 border-dashed p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors duration-200 mb-4"
-                style={{ minHeight: 160 }}
               >
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept=".png,.jpg,.jpeg,.pdf"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) pickFile(f); }}
-                />
+                <div className="flex items-start gap-3 mb-4">
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: file ? `${P.success}18` : "#F0F0F0" }}
+                  >
+                    {file ? (
+                      <Check className="w-6 h-6" style={{ color: P.success }} />
+                    ) : (
+                      <Upload className="w-6 h-6" style={{ color: P.default }} />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm" style={{ fontWeight: 700, color: "#333" }}>
+                      {file ? "Comprobante listo para enviar" : "Adjunta tu comprobante"}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: P.default, fontWeight: 500 }}>
+                      {file
+                        ? "Si quieres reemplazarlo, vuelve a adjuntarlo antes de enviarlo"
+                        : "Selecciona un archivo desde tu dispositivo para cargarlo en la plataforma"}
+                    </p>
+                  </div>
+                </div>
 
-                <AnimatePresence mode="wait">
-                  {!file ? (
-                    <motion.div
-                      key="empty"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      className="flex flex-col items-center gap-3"
-                    >
-                      <div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                        style={{ backgroundColor: dragging ? `${P.info}20` : "#F0F0F0" }}
-                      >
-                        <Upload className="w-7 h-7" style={{ color: dragging ? P.info : P.default }} />
-                      </div>
-                      <div>
-                        <p className="text-sm" style={{ fontWeight: 700, color: dragging ? P.info : "#333" }}>
-                          {dragging ? "Suelta el archivo aquí" : "Arrastra tu archivo aquí"}
-                        </p>
-                        <p className="text-xs mt-1" style={{ color: P.default, fontWeight: 500 }}>
-                          o haz clic para seleccionar desde tu dispositivo
-                        </p>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="file"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      className="flex flex-col items-center gap-3 w-full"
-                    >
-                      <div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                        style={{ backgroundColor: `${P.success}18` }}
-                      >
-                        <Check className="w-7 h-7" style={{ color: P.success }} />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm" style={{ fontWeight: 700, color: "#333" }}>
-                          Archivo listo
-                        </p>
-                        <p className="text-xs mt-0.5" style={{ color: P.default, fontWeight: 500 }}>
-                          Toca para cambiar
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                <label
+                  className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm transition-colors cursor-pointer"
+                  style={{
+                    backgroundColor: file ? `${P.success}12` : `${P.info}12`,
+                    color: file ? P.success : P.info,
+                    fontWeight: 700,
+                  }}
+                >
+                  <input
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.pdf"
+                    className="sr-only"
+                    onChange={(e) => {
+                      handleFileSelected(e.target.files?.[0] ?? null);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                  {file ? <Check className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
+                  {file ? "Cambiar comprobante" : "Adjuntar comprobante"}
+                </label>
+                {fileError && (
+                  <p className="text-xs mt-2" style={{ color: P.primary, fontWeight: 600 }}>
+                    {fileError}
+                  </p>
+                )}
+              </div>
 
               {/* File preview pill */}
               <AnimatePresence>
@@ -1073,12 +847,6 @@ function InscriptionModal({ onClose, onSuccess }: { onClose: () => void; onSucce
                               <span className="flex-1 text-sm truncate" style={{ fontWeight: 500 }}>
                                 {email}
                               </span>
-                              <span
-                                className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: `${P.secondary}18`, color: P.secondary, fontWeight: 600 }}
-                              >
-                                Pendiente
-                              </span>
                               <button
                                 onClick={() => setInvited((prev) => prev.filter((e) => e !== email))}
                                 className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-50 transition-colors duration-150 flex-shrink-0"
@@ -1240,34 +1008,6 @@ export function Dashboard() {
     );
   };
 
-  const handleAccept = () => {
-    if (!selectedNotif) return;
-    setNotifs((prev) =>
-      prev.map((n) =>
-        n.id === selectedNotif.id ? { ...n, status: "accepted", read: true } : n
-      )
-    );
-    setRoleInTeam("jugador");
-    setTeamName(selectedNotif.team);
-    setJoinedAt("2026-03-15");
-    setTeamSchedule(createTeamSchedule(selectedNotif.team));
-    ensurePaymentNotification();
-    setSelectedNotif(null);
-    setNotifOpen(false);
-    showToast(`¡Bienvenido a ${selectedNotif.team}!`, P.success);
-  };
-
-  const handleReject = () => {
-    if (!selectedNotif) return;
-    setNotifs((prev) =>
-      prev.map((n) =>
-        n.id === selectedNotif.id ? { ...n, status: "rejected", read: true } : n
-      )
-    );
-    setSelectedNotif(null);
-    showToast(`Invitación de ${selectedNotif.team} rechazada`, P.default);
-  };
-
   const handleLogout = () => {
     setShowLogout(false);
     sessionStorage.removeItem("userContext");
@@ -1356,7 +1096,7 @@ export function Dashboard() {
                       notifs={notifs}
                       onClose={() => setNotifOpen(false)}
                       onSelectNotif={(n) => {
-                        if (n.type === "payment" && !isRegistered) {
+                        if (!isRegistered) {
                           setNotifOpen(false);
                           showToast("Debes estar inscrito en el torneo para subir comprobante", P.secondary);
                           return;
@@ -1396,21 +1136,9 @@ export function Dashboard() {
         </div>
       </motion.header>
 
-      {/* ── Invite modal ── */}
-      <AnimatePresence>
-        {selectedNotif && selectedNotif.type === "invite" && (
-          <InviteModal
-            notif={selectedNotif}
-            onAccept={handleAccept}
-            onReject={handleReject}
-            onClose={() => setSelectedNotif(null)}
-          />
-        )}
-      </AnimatePresence>
-
       {/* ── Payment modal ── */}
       <AnimatePresence>
-        {selectedNotif && selectedNotif.type === "payment" && (
+        {selectedNotif && (
           <PaymentModal
             onClose={() => setSelectedNotif(null)}
             onSuccess={() => {
@@ -1653,7 +1381,7 @@ export function Dashboard() {
         >
           {!isRegistered ? (
             <p style={{ fontSize: "0.84rem", color: P.default, fontWeight: 500 }}>
-              Aún no perteneces a un equipo. Inscríbete o acepta una invitación para ver información del equipo y fechas de juego.
+              Aún no perteneces a un equipo. Inscribe tu equipo para ver información del grupo y fechas de juego.
             </p>
           ) : (
             <>

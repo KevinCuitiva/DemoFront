@@ -13,6 +13,7 @@ import {
   FileText,
   X,
   Image as ImageIcon,
+  Eye,
 } from "lucide-react";
 
 const P = {
@@ -45,15 +46,15 @@ interface TeamPayment {
 
 // Datos de ejemplo
 const teamsData: TeamPayment[] = [
-  { id: 1, nombre: "Los Compiladores", decanatura: "Ing. Sistemas", capitan: "Juan Pérez", monto: 50000, estado: "pagado", fecha: "2026-02-15", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200", comprobanteTipo: "imagen" },
-  { id: 2, nombre: "Bug Hunters", decanatura: "Ing. de Inteligencia Artificial", capitan: "María García", monto: 50000, estado: "pagado", fecha: "2026-02-18", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=1200", comprobanteTipo: "imagen" },
-  { id: 3, nombre: "Stack Overflow FC", decanatura: "Ing. Industrial", capitan: "Carlos López", monto: 50000, estado: "pendiente", fecha: "-", revisadoPor: "-", comprobanteUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", comprobanteTipo: "pdf" },
-  { id: 4, nombre: "Null Pointers", decanatura: "Ing. Electrónica", capitan: "Ana Martínez", monto: 50000, estado: "pagado", fecha: "2026-02-20", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1556740749-887f6717d7e4?w=1200", comprobanteTipo: "imagen" },
-  { id: 5, nombre: "Recursive United", decanatura: "Ing. Civil", capitan: "Pedro Sánchez", monto: 50000, estado: "pagado", fecha: "2026-02-22", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200", comprobanteTipo: "imagen" },
+  { id: 1, nombre: "Los Compiladores", decanatura: "Ing. Sistemas", capitan: "Juan Pérez", monto: 50000, estado: "pagado", fecha: "2026-02-15", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1579621970795-87facc2f976d?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
+  { id: 2, nombre: "Bug Hunters", decanatura: "Ing. de Inteligencia Artificial", capitan: "María García", monto: 50000, estado: "pagado", fecha: "2026-02-18", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
+  { id: 3, nombre: "Stack Overflow FC", decanatura: "Ing. Industrial", capitan: "Carlos López", monto: 50000, estado: "pendiente", fecha: "-", revisadoPor: "-", comprobanteUrl: "https://images.unsplash.com/photo-1565514020179-026b92b2d6c6?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
+  { id: 4, nombre: "Null Pointers", decanatura: "Ing. Electrónica", capitan: "Ana Martínez", monto: 50000, estado: "pagado", fecha: "2026-02-20", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
+  { id: 5, nombre: "Recursive United", decanatura: "Ing. Civil", capitan: "Pedro Sánchez", monto: 50000, estado: "pagado", fecha: "2026-02-22", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
   { id: 6, nombre: "Array Warriors", decanatura: "Ing. de Ciberseguridad", capitan: "Laura Díaz", monto: 50000, estado: "pendiente", fecha: "-", revisadoPor: "-", comprobanteUrl: null, comprobanteTipo: null },
-  { id: 7, nombre: "Boolean FC", decanatura: "Administración de Empresas", capitan: "Diego Torres", monto: 50000, estado: "pagado", fecha: "2026-02-25", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200", comprobanteTipo: "imagen" },
-  { id: 8, nombre: "Async Avengers", decanatura: "Ing. Mecánica", capitan: "Sofia Ruiz", monto: 50000, estado: "rechazado", fecha: "-", revisadoPor: "Organizador", comprobanteUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", comprobanteTipo: "pdf" },
-  { id: 9, nombre: "Code Masters", decanatura: "Ing. en Biotecnología", capitan: "Miguel Ángel", monto: 50000, estado: "pagado", fecha: "2026-02-28", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=1200", comprobanteTipo: "imagen" },
+  { id: 7, nombre: "Boolean FC", decanatura: "Administración de Empresas", capitan: "Diego Torres", monto: 50000, estado: "pagado", fecha: "2026-02-25", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
+  { id: 8, nombre: "Async Avengers", decanatura: "Ing. Mecánica", capitan: "Sofia Ruiz", monto: 50000, estado: "rechazado", fecha: "-", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1599059813005-11265ba4b4ce?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
+  { id: 9, nombre: "Code Masters", decanatura: "Ing. en Biotecnología", capitan: "Miguel Ángel", monto: 50000, estado: "pagado", fecha: "2026-02-28", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1554224154-22dec7ec8818?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
   { id: 10, nombre: "Dev United", decanatura: "Ing. Biomédica", capitan: "Camila Rojas", monto: 50000, estado: "pendiente", fecha: "-", revisadoPor: "-", comprobanteUrl: null, comprobanteTipo: null },
 ];
 
@@ -328,6 +329,9 @@ export function PaymentReport() {
                     Fecha
                   </th>
                   <th className="text-left px-6 py-4 text-xs" style={{ fontWeight: 700, color: P.default, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Comprobante
+                  </th>
+                  <th className="text-left px-6 py-4 text-xs" style={{ fontWeight: 700, color: P.default, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     Revisión
                   </th>
                 </tr>
@@ -341,9 +345,8 @@ export function PaymentReport() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.25 + idx * 0.02 }}
-                      onClick={() => setSelectedTeam(team)}
                       style={{ borderBottom: "1px solid rgba(0,0,0,0.04)" }}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-6 py-4">
                         <p style={{ fontWeight: 600, fontSize: "0.9rem", color: P.textPrimary }}>{team.nombre}</p>
@@ -371,6 +374,29 @@ export function PaymentReport() {
                       </td>
                       <td className="px-6 py-4">
                         <p style={{ fontWeight: 500, fontSize: "0.85rem", color: P.default }}>{team.fecha}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        {team.comprobanteUrl ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedTeam(team);
+                            }}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors"
+                            style={{
+                              backgroundColor: `${P.info}12`,
+                              color: P.info,
+                              fontWeight: 700,
+                            }}
+                          >
+                            <Eye style={{ width: 14, height: 14 }} />
+                            Revisar comprobante
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: "0.75rem", color: P.default, fontWeight: 600 }}>
+                            Sin archivo
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         {team.estado === "pendiente" ? (
