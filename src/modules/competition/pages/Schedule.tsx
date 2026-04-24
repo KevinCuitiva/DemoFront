@@ -5,6 +5,7 @@
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, CalendarDays, MapPin, Clock } from "lucide-react";
+import { readUICache } from "@/core/utils/uiCache";
 
 const P = {
   primary: "#B81C1C",
@@ -16,47 +17,11 @@ const P = {
   bg: "#F2F2F7",
 };
 
-const upcomingDates = [
-  {
-    date: "5 Mar",
-    weekday: "Jueves",
-    events: [
-      { time: "09:00", name: "Cuartos de Final", venue: "Sala Principal", teams: "Equipo Alpha vs Equipo Sigma" },
-      { time: "14:00", name: "Cuartos de Final", venue: "Arena Central", teams: "Equipo Nova vs Equipo Delta" },
-    ],
-  },
-  {
-    date: "7 Mar",
-    weekday: "Sábado",
-    events: [
-      { time: "10:00", name: "Semifinal 1", venue: "Sala Principal", teams: "Ganador QF1 vs Ganador QF2" },
-      { time: "16:00", name: "Semifinal 2", venue: "Sala Principal", teams: "Ganador QF3 vs Ganador QF4" },
-    ],
-  },
-  {
-    date: "9 Mar",
-    weekday: "Lunes",
-    events: [
-      { time: "11:00", name: "Tercer Puesto", venue: "Arena Sur", teams: "Perdedor SF1 vs Perdedor SF2" },
-      { time: "18:00", name: "Gran Final", venue: "Arena Central", teams: "Ganador SF1 vs Ganador SF2" },
-    ],
-  },
-  {
-    date: "12 Mar",
-    weekday: "Jueves",
-    events: [
-      { time: "10:00", name: "Torneo Relámpago – Fase 1", venue: "Sala Norte", teams: "Leones FC vs Titanes" },
-    ],
-  },
-  {
-    date: "15 Mar",
-    weekday: "Domingo",
-    events: [
-      { time: "09:00", name: "Torneo Relámpago – Final", venue: "Arena Central", teams: "Async Avengers vs Boolean FC" },
-      { time: "19:00", name: "Ceremonia de Premiación", venue: "Auditorio Principal", teams: "Todos los equipos" },
-    ],
-  },
-];
+const upcomingDates = readUICache<Array<{
+  date: string;
+  weekday: string;
+  events: Array<{ time: string; name: string; venue: string; teams: string }>;
+}>>("techcup.ui.schedule", []);
 
 function SectionLabel({ text, color }: { text: string; color: string }) {
   return (
@@ -136,76 +101,86 @@ export function Schedule() {
 
         {/* ── Timeline ── */}
         <div className="space-y-6">
-          {upcomingDates.map((day, dayIndex) => (
-            <motion.div
-              key={day.date}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + dayIndex * 0.09, duration: 0.4, ease: "easeOut" }}
-              className="flex gap-3 sm:gap-5"
-            >
-              {/* Date column */}
-              <div className="flex-shrink-0 w-14 sm:w-16 pt-1">
-                <div
-                  className="flex flex-col items-center justify-center rounded-2xl py-2 sm:py-2.5 px-1"
-                  style={{ backgroundColor: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-                >
-                  <p style={{ fontSize: "1.2rem", fontWeight: 800, color: P.secondary, lineHeight: 1, letterSpacing: "-0.02em" }} className="sm:text-[1.4rem]">
-                    {day.date.split(" ")[0]}
-                  </p>
-                  <p style={{ fontSize: "0.6rem", fontWeight: 700, color: P.secondary, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }} className="sm:text-[0.65rem]">
-                    {day.date.split(" ")[1]}
-                  </p>
-                  <p style={{ fontSize: "0.58rem", color: P.default, fontWeight: 500, marginTop: 1 }} className="sm:text-[0.62rem] hidden sm:block">
-                    {day.weekday}
-                  </p>
-                </div>
-              </div>
-
-              {/* Timeline connector */}
-              <div className="flex flex-col items-center pt-4">
-                <div className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: P.secondary }} />
-                {dayIndex < upcomingDates.length - 1 && (
-                  <div className="w-px flex-1 mt-2" style={{ background: `linear-gradient(to bottom, ${P.secondary}30, transparent)` }} />
-                )}
-              </div>
-
-              {/* Events */}
-              <div className="flex-1 pb-4 space-y-3 min-w-0">
-                {day.events.map((event, eventIndex) => (
-                  <motion.div
-                    key={eventIndex}
-                    whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.09)" }}
-                    className="flex items-center bg-white rounded-[20px] px-3 sm:px-5 py-3 sm:py-4 transition-all duration-300"
-                    style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+          {upcomingDates.length === 0 ? (
+            <div className="bg-white rounded-[20px] p-8 text-center" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+              <CalendarDays className="w-10 h-10 mx-auto mb-3" style={{ color: P.default, opacity: 0.35 }} />
+              <p style={{ fontWeight: 700, color: P.textPrimary }}>No hay partidos programados</p>
+              <p className="mt-1" style={{ fontSize: "0.82rem", color: P.default, fontWeight: 500 }}>
+                Cuando el backend entregue fechas, el calendario aparecerá aquí.
+              </p>
+            </div>
+          ) : (
+            upcomingDates.map((day, dayIndex) => (
+              <motion.div
+                key={day.date}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + dayIndex * 0.09, duration: 0.4, ease: "easeOut" }}
+                className="flex gap-3 sm:gap-5"
+              >
+                {/* Date column */}
+                <div className="flex-shrink-0 w-14 sm:w-16 pt-1">
+                  <div
+                    className="flex flex-col items-center justify-center rounded-2xl py-2 sm:py-2.5 px-1"
+                    style={{ backgroundColor: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
                   >
-                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 pr-2">
-                      {/* Time badge */}
-                      <div
-                        className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl"
-                        style={{ backgroundColor: `${P.secondary}10` }}
-                      >
-                        <Clock style={{ width: 10, height: 10, color: P.secondary }} className="sm:w-[11px] sm:h-[11px]" />
-                        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: P.secondary }} className="sm:text-[0.78rem]">{event.time}</span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p style={{ fontSize: "0.8rem", fontWeight: 700, color: P.textPrimary }} className="truncate sm:text-[0.88rem]">
-                          {event.name}
-                        </p>
-                        <p style={{ fontSize: "0.7rem", color: P.info, fontWeight: 600 }} className="truncate sm:text-[0.75rem]">
-                          {event.teams}
-                        </p>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <MapPin style={{ width: 9, height: 9, color: P.default }} className="sm:w-[10px] sm:h-[10px] flex-shrink-0" />
-                          <p style={{ fontSize: "0.7rem", color: P.default, fontWeight: 500 }} className="truncate sm:text-[0.75rem]">{event.venue}</p>
+                    <p style={{ fontSize: "1.2rem", fontWeight: 800, color: P.secondary, lineHeight: 1, letterSpacing: "-0.02em" }} className="sm:text-[1.4rem]">
+                      {day.date.split(" ")[0]}
+                    </p>
+                    <p style={{ fontSize: "0.6rem", fontWeight: 700, color: P.secondary, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }} className="sm:text-[0.65rem]">
+                      {day.date.split(" ")[1]}
+                    </p>
+                    <p style={{ fontSize: "0.58rem", color: P.default, fontWeight: 500, marginTop: 1 }} className="sm:text-[0.62rem] hidden sm:block">
+                      {day.weekday}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Timeline connector */}
+                <div className="flex flex-col items-center pt-4">
+                  <div className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: P.secondary }} />
+                  {dayIndex < upcomingDates.length - 1 && (
+                    <div className="w-px flex-1 mt-2" style={{ background: `linear-gradient(to bottom, ${P.secondary}30, transparent)` }} />
+                  )}
+                </div>
+
+                {/* Events */}
+                <div className="flex-1 pb-4 space-y-3 min-w-0">
+                  {day.events.map((event, eventIndex) => (
+                    <motion.div
+                      key={eventIndex}
+                      whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.09)" }}
+                      className="flex items-center bg-white rounded-[20px] px-3 sm:px-5 py-3 sm:py-4 transition-all duration-300"
+                      style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 pr-2">
+                        {/* Time badge */}
+                        <div
+                          className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl"
+                          style={{ backgroundColor: `${P.secondary}10` }}
+                        >
+                          <Clock style={{ width: 10, height: 10, color: P.secondary }} className="sm:w-[11px] sm:h-[11px]" />
+                          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: P.secondary }} className="sm:text-[0.78rem]">{event.time}</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p style={{ fontSize: "0.8rem", fontWeight: 700, color: P.textPrimary }} className="truncate sm:text-[0.88rem]">
+                            {event.name}
+                          </p>
+                          <p style={{ fontSize: "0.7rem", color: P.info, fontWeight: 600 }} className="truncate sm:text-[0.75rem]">
+                            {event.teams}
+                          </p>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <MapPin style={{ width: 9, height: 9, color: P.default }} className="sm:w-[10px] sm:h-[10px] flex-shrink-0" />
+                            <p style={{ fontSize: "0.7rem", color: P.default, fontWeight: 500 }} className="truncate sm:text-[0.75rem]">{event.venue}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          ))}
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
 
       </main>

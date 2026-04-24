@@ -4,7 +4,7 @@
  */
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronLeft,
   Download,
@@ -19,6 +19,7 @@ import {
   Image as ImageIcon,
   Eye,
 } from "lucide-react";
+import { readUICache, writeUICache } from "@/core/utils/uiCache";
 
 const P = {
   primary: "#B81C1C",
@@ -48,26 +49,29 @@ interface TeamPayment {
   comprobanteTipo: "imagen" | "pdf" | null;
 }
 
-// Datos de ejemplo
-const teamsData: TeamPayment[] = [
-  { id: 1, nombre: "Los Compiladores", decanatura: "Ing. Sistemas", capitan: "Juan Pérez", monto: 50000, estado: "pagado", fecha: "2026-02-15", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1579621970795-87facc2f976d?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
-  { id: 2, nombre: "Bug Hunters", decanatura: "Ing. de Inteligencia Artificial", capitan: "María García", monto: 50000, estado: "pagado", fecha: "2026-02-18", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
-  { id: 3, nombre: "Stack Overflow FC", decanatura: "Ing. Industrial", capitan: "Carlos López", monto: 50000, estado: "pendiente", fecha: "-", revisadoPor: "-", comprobanteUrl: "https://images.unsplash.com/photo-1565514020179-026b92b2d6c6?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
-  { id: 4, nombre: "Null Pointers", decanatura: "Ing. Electrónica", capitan: "Ana Martínez", monto: 50000, estado: "pagado", fecha: "2026-02-20", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
-  { id: 5, nombre: "Recursive United", decanatura: "Ing. Civil", capitan: "Pedro Sánchez", monto: 50000, estado: "pagado", fecha: "2026-02-22", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
-  { id: 6, nombre: "Array Warriors", decanatura: "Ing. de Ciberseguridad", capitan: "Laura Díaz", monto: 50000, estado: "pendiente", fecha: "-", revisadoPor: "-", comprobanteUrl: null, comprobanteTipo: null },
-  { id: 7, nombre: "Boolean FC", decanatura: "Administración de Empresas", capitan: "Diego Torres", monto: 50000, estado: "pagado", fecha: "2026-02-25", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
-  { id: 8, nombre: "Async Avengers", decanatura: "Ing. Mecánica", capitan: "Sofia Ruiz", monto: 50000, estado: "rechazado", fecha: "-", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1599059813005-11265ba4b4ce?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
-  { id: 9, nombre: "Code Masters", decanatura: "Ing. en Biotecnología", capitan: "Miguel Ángel", monto: 50000, estado: "pagado", fecha: "2026-02-28", revisadoPor: "Organizador", comprobanteUrl: "https://images.unsplash.com/photo-1554224154-22dec7ec8818?auto=format&fit=crop&w=1200&q=80", comprobanteTipo: "imagen" },
-  { id: 10, nombre: "Dev United", decanatura: "Ing. Biomédica", capitan: "Camila Rojas", monto: 50000, estado: "pendiente", fecha: "-", revisadoPor: "-", comprobanteUrl: null, comprobanteTipo: null },
-];
+// Datos iniciales vacíos; el back llenará la información cuando esté conectado.
+const teamsData: TeamPayment[] = [];
 
 export function PaymentReport() {
   const navigate = useNavigate();
-  const [teams, setTeams] = useState(teamsData);
+  const [teams, setTeams] = useState<TeamPayment[]>(() => readUICache<TeamPayment[]>("techcup.ui.paymentReport.teams", teamsData));
   const [selectedTeam, setSelectedTeam] = useState<TeamPayment | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "pagado" | "pendiente" | "rechazado">("all");
+  const [searchTerm, setSearchTerm] = useState(() => readUICache<string>("techcup.ui.paymentReport.search", ""));
+  const [filterStatus, setFilterStatus] = useState<"all" | "pagado" | "pendiente" | "rechazado">(
+    () => readUICache<"all" | "pagado" | "pendiente" | "rechazado">("techcup.ui.paymentReport.filterStatus", "all")
+  );
+
+  useEffect(() => {
+    writeUICache("techcup.ui.paymentReport.teams", teams);
+  }, [teams]);
+
+  useEffect(() => {
+    writeUICache("techcup.ui.paymentReport.search", searchTerm);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    writeUICache("techcup.ui.paymentReport.filterStatus", filterStatus);
+  }, [filterStatus]);
 
   const filteredTeams = teams.filter((team) => {
     const matchesSearch = team.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -435,7 +439,11 @@ export function PaymentReport() {
 
           {filteredTeams.length === 0 && (
             <div className="py-12 text-center">
-              <p style={{ color: P.default, fontWeight: 500 }}>No se encontraron resultados</p>
+              <CreditCard className="w-10 h-10 mx-auto mb-3" style={{ color: P.default, opacity: 0.35 }} />
+              <p style={{ color: P.textPrimary, fontWeight: 700 }}>Sin pagos registrados</p>
+              <p className="mt-1" style={{ color: P.default, fontWeight: 500, fontSize: "0.82rem" }}>
+                Cuando el back esté conectado, aquí aparecerán los comprobantes y estados de pago.
+              </p>
             </div>
           )}
         </motion.div>

@@ -4,7 +4,7 @@
  */
 import React from "react";
 import { motion } from "motion/react";
-import { Shield, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Shield, User, Mail, Lock, Eye, EyeOff, Upload, Shirt, CalendarDays, Trophy } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router";
 import logoTechcup from "@/assets/logo.png";
@@ -16,11 +16,37 @@ const P = {
 };
 
 export function Register() {
+  const weekDays = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+  const careerOptions = [
+    "Ingeniería de Sistemas",
+    "Ingeniería de Inteligencia Artificial",
+    "Ingeniería de Ciberseguridad",
+    "Ingeniería Estadística",
+  ];
   const [isLoading, setIsLoading] = useState(false);
+  const [showSportsProfileSetup, setShowSportsProfileSetup] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
-  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; confirmPassword?: string }>({});
+  const [sportsProfile, setSportsProfile] = useState({
+    profilePhotoName: "",
+    preferredPosition: "",
+    favoriteJerseyNumber: "",
+    availabilityDays: [] as string[],
+    semester: "",
+    career: "",
+  });
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    preferredPosition?: string;
+    favoriteJerseyNumber?: string;
+    availabilityDays?: string;
+    semester?: string;
+    career?: string;
+  }>({});
   const [capsLockPassword, setCapsLockPassword] = useState(false);
   const [capsLockConfirm, setCapsLockConfirm] = useState(false);
   const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
@@ -52,7 +78,17 @@ export function Register() {
   };
 
   const validate = () => {
-    const nextErrors: { name?: string; email?: string; password?: string; confirmPassword?: string } = {};
+    const nextErrors: {
+      name?: string;
+      email?: string;
+      password?: string;
+      confirmPassword?: string;
+      preferredPosition?: string;
+      favoriteJerseyNumber?: string;
+      availabilityDays?: string;
+      semester?: string;
+      career?: string;
+    } = {};
     if (!formData.name.trim()) nextErrors.name = "El nombre es obligatorio";
     else if (!/^[A-Za-zÀ-ÿ\s]+$/.test(formData.name.trim())) nextErrors.name = "Solo se permiten letras y espacios";
 
@@ -67,6 +103,17 @@ export function Register() {
 
     if (!formData.confirmPassword) nextErrors.confirmPassword = "Confirma la contraseña";
     else if (formData.confirmPassword !== formData.password) nextErrors.confirmPassword = "Las contraseñas no coinciden";
+
+    if (!sportsProfile.preferredPosition.trim()) nextErrors.preferredPosition = "Selecciona tu posición de juego";
+
+    const jersey = Number(sportsProfile.favoriteJerseyNumber);
+    if (!sportsProfile.favoriteJerseyNumber.trim()) nextErrors.favoriteJerseyNumber = "Indica tu número de camisa favorito";
+    else if (!Number.isInteger(jersey) || jersey < 0 || jersey > 99) nextErrors.favoriteJerseyNumber = "Debe ser un número entre 0 y 99";
+
+    if (sportsProfile.availabilityDays.length === 0) nextErrors.availabilityDays = "Selecciona al menos un día de disponibilidad";
+
+    if (!sportsProfile.semester) nextErrors.semester = "Selecciona tu semestre";
+    if (!sportsProfile.career) nextErrors.career = "Selecciona tu carrera";
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -90,6 +137,35 @@ export function Register() {
     }
   };
 
+  const handleSportsProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setSportsProfile((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof typeof errors]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleAvailabilityToggle = (day: string) => {
+    setSportsProfile((prev) => {
+      const exists = prev.availabilityDays.includes(day);
+      return {
+        ...prev,
+        availabilityDays: exists
+          ? prev.availabilityDays.filter((item) => item !== day)
+          : [...prev.availabilityDays, day],
+      };
+    });
+    if (errors.availabilityDays) {
+      setErrors((prev) => ({ ...prev, availabilityDays: undefined }));
+    }
+  };
+
+  const handleProfilePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSportsProfile((prev) => ({ ...prev, profilePhotoName: file.name }));
+  };
+
   const inputBase: React.CSSProperties = {
     width: "100%",
     fontSize: "0.92rem",
@@ -101,6 +177,14 @@ export function Register() {
     padding: "0.75rem 1rem 0.75rem 2.8rem",
     color: "#1C1C1E",
     transition: "border-color 0.2s",
+  };
+
+  const selectBase: React.CSSProperties = {
+    fontSize: "0.9rem",
+    fontWeight: 500,
+    backgroundColor: P.bg,
+    border: "1.5px solid rgba(0,0,0,0.08)",
+    color: "#1C1C1E",
   };
 
   return (
@@ -212,6 +296,12 @@ export function Register() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-3.5">
+              <div className="pt-1 pb-1">
+                <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#1C1C1E", letterSpacing: "0.03em", textTransform: "uppercase" }}>
+                  Datos de registro
+                </p>
+              </div>
+
               {/* Name */}
               <div>
                 <label className="block mb-1.5" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#6E6E73" }}>Nombre completo</label>
@@ -289,27 +379,186 @@ export function Register() {
                 {errors.confirmPassword && <p className="mt-1" style={{ fontSize: "0.75rem", color: P.primary, fontWeight: 600 }}>{errors.confirmPassword}</p>}
               </div>
 
-              {/* Submit */}
-              <motion.button
-                type="submit"
-                disabled={isLoading}
-                whileHover={{ scale: 1.02, y: -1 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full text-white flex items-center justify-center mt-2"
-                style={{
-                  backgroundColor: P.primary,
-                  fontWeight: 700,
-                  fontSize: "0.92rem",
-                  padding: "0.9rem 1.5rem",
-                  borderRadius: "14px",
-                  boxShadow: "0 6px 24px rgba(184,28,28,0.28)",
-                  opacity: isLoading ? 0.75 : 1,
-                }}
-              >
-                {isLoading ? (
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                ) : "Crear cuenta"}
-              </motion.button>
+              <div className="pt-2 pb-1">
+                <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#1C1C1E", letterSpacing: "0.03em", textTransform: "uppercase" }}>
+                  Información académica
+                </p>
+              </div>
+
+              <div>
+                <label className="block mb-1.5" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#6E6E73" }}>Semestre</label>
+                <select
+                  name="semester"
+                  value={sportsProfile.semester}
+                  onChange={handleSportsProfileChange}
+                  className="w-full rounded-2xl px-4 py-3"
+                  style={selectBase}
+                >
+                  <option value="">Selecciona semestre</option>
+                  {Array.from({ length: 8 }, (_, idx) => {
+                    const semester = String(idx + 1);
+                    return (
+                      <option key={semester} value={semester}>
+                        {semester}
+                      </option>
+                    );
+                  })}
+                </select>
+                {errors.semester && <p className="mt-1" style={{ fontSize: "0.75rem", color: P.primary, fontWeight: 600 }}>{errors.semester}</p>}
+              </div>
+
+              <div>
+                <label className="block mb-1.5" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#6E6E73" }}>Carrera</label>
+                <select
+                  name="career"
+                  value={sportsProfile.career}
+                  onChange={handleSportsProfileChange}
+                  className="w-full rounded-2xl px-4 py-3"
+                  style={selectBase}
+                >
+                  <option value="">Selecciona carrera</option>
+                  {careerOptions.map((career) => (
+                    <option key={career} value={career}>
+                      {career}
+                    </option>
+                  ))}
+                </select>
+                {errors.career && <p className="mt-1" style={{ fontSize: "0.75rem", color: P.primary, fontWeight: 600 }}>{errors.career}</p>}
+              </div>
+
+              {!showSportsProfileSetup ? (
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowSportsProfileSetup(true)}
+                  className="w-full text-white flex items-center justify-center gap-2 mt-2"
+                  style={{
+                    backgroundColor: P.primary,
+                    fontWeight: 700,
+                    fontSize: "0.92rem",
+                    padding: "0.9rem 1.5rem",
+                    borderRadius: "14px",
+                    boxShadow: "0 6px 24px rgba(184,28,28,0.28)",
+                  }}
+                >
+                  <Trophy className="w-4 h-4" />
+                  Configurar perfil deportivo
+                </motion.button>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-3 rounded-2xl p-4"
+                  style={{ backgroundColor: P.bg, border: "1px solid rgba(0,0,0,0.06)" }}
+                >
+                  <p className="mb-3" style={{ fontSize: "0.8rem", fontWeight: 700, color: "#1C1C1E", letterSpacing: "0.03em", textTransform: "uppercase" }}>
+                    Perfil deportivo
+                  </p>
+
+                  <div className="space-y-3.5">
+                    <div>
+                      <label className="block mb-1.5" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#6E6E73" }}>Foto de perfil</label>
+                      <label
+                        className="w-full flex items-center justify-between rounded-2xl px-4 py-3 cursor-pointer"
+                        style={{ backgroundColor: "white", border: "1.5px dashed rgba(0,0,0,0.15)" }}
+                      >
+                        <span style={{ fontSize: "0.84rem", color: sportsProfile.profilePhotoName ? "#1C1C1E" : "#6E6E73", fontWeight: 500 }}>
+                          {sportsProfile.profilePhotoName || "Subir foto de perfil"}
+                        </span>
+                        <Upload className="w-4 h-4" style={{ color: "#6E6E73" }} />
+                        <input type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoUpload} />
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1.5" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#6E6E73" }}>Posición de juego</label>
+                      <select
+                        name="preferredPosition"
+                        value={sportsProfile.preferredPosition}
+                        onChange={handleSportsProfileChange}
+                        className="w-full rounded-2xl px-4 py-3"
+                        style={{ fontSize: "0.9rem", fontWeight: 500, backgroundColor: "white", border: "1.5px solid rgba(0,0,0,0.08)", color: "#1C1C1E" }}
+                      >
+                        <option value="">Selecciona una posición</option>
+                        <option value="Portero">Portero</option>
+                        <option value="Defensa">Defensa</option>
+                        <option value="Mediocampista">Mediocampista</option>
+                        <option value="Delantero">Delantero</option>
+                      </select>
+                      {errors.preferredPosition && <p className="mt-1" style={{ fontSize: "0.75rem", color: P.primary, fontWeight: 600 }}>{errors.preferredPosition}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block mb-1.5" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#6E6E73" }}>Número de camisa favorito</label>
+                      <div className="relative">
+                        <Shirt className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#6E6E73" }} />
+                        <input
+                          type="number"
+                          min={0}
+                          max={99}
+                          name="favoriteJerseyNumber"
+                          value={sportsProfile.favoriteJerseyNumber}
+                          onChange={handleSportsProfileChange}
+                          placeholder="Ej: 10"
+                          style={inputBase}
+                        />
+                      </div>
+                      {errors.favoriteJerseyNumber && <p className="mt-1" style={{ fontSize: "0.75rem", color: P.primary, fontWeight: 600 }}>{errors.favoriteJerseyNumber}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block mb-2" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#6E6E73" }}>
+                        <CalendarDays className="inline w-4 h-4 mr-1" />
+                        Disponibilidad de días (Lunes a Sábado)
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {weekDays.map((day) => {
+                          const selected = sportsProfile.availabilityDays.includes(day);
+                          return (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => handleAvailabilityToggle(day)}
+                              className="rounded-xl px-3 py-2 text-sm"
+                              style={{
+                                border: `1.5px solid ${selected ? `${P.secondary}60` : "rgba(0,0,0,0.08)"}`,
+                                backgroundColor: selected ? `${P.secondary}14` : "white",
+                                color: selected ? P.secondary : "#1C1C1E",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {day}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {errors.availabilityDays && <p className="mt-1" style={{ fontSize: "0.75rem", color: P.primary, fontWeight: 600 }}>{errors.availabilityDays}</p>}
+                    </div>
+
+                    <motion.button
+                      type="submit"
+                      disabled={isLoading}
+                      whileHover={{ scale: 1.02, y: -1 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full text-white flex items-center justify-center mt-2"
+                      style={{
+                        backgroundColor: P.primary,
+                        fontWeight: 700,
+                        fontSize: "0.92rem",
+                        padding: "0.9rem 1.5rem",
+                        borderRadius: "14px",
+                        boxShadow: "0 6px 24px rgba(184,28,28,0.28)",
+                        opacity: isLoading ? 0.75 : 1,
+                      }}
+                    >
+                      {isLoading ? (
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                      ) : "Crear perfil"}
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
             </form>
 
             {/* Privacy note */}

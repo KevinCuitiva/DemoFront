@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Link, useNavigate } from "react-router";
 import { useState, useRef, useEffect } from "react";
 import logoTechcup from "@/assets/logo.png";
+import { readUICache, writeUICache, removeUICache } from "@/core/utils/uiCache";
 import {
   User,
   Swords,
@@ -103,8 +104,10 @@ interface Notification {
 }
 
 const initialNotifs: Notification[] = [];
+const TEAM_NOTIFS_STORAGE_KEY = "techcup.teamNotifications";
 
 type RoleType = "jugador" | "capitan";
+type TeamStatus = "draft" | "pending-payment" | "in-review" | "active";
 
 interface TeamScheduleItem {
   id: number;
@@ -145,42 +148,34 @@ interface InvitedMemberDraft {
   jerseyNumber: number;
 }
 
-const createTeamSchedule = (teamName: string): TeamScheduleItem[] => [
-  { id: 1, date: "2026-03-18", label: "Fase de grupos", opponent: `${teamName} vs Equipo Nova`, venue: "Cancha Norte", hour: "09:00" },
-  { id: 2, date: "2026-03-22", label: "Fase de grupos", opponent: `${teamName} vs Equipo Delta`, venue: "Cancha Central", hour: "14:00" },
-  { id: 3, date: "2026-03-27", label: "Cuartos de final", opponent: `${teamName} vs Equipo Alpha`, venue: "Cancha Sur", hour: "16:00" },
-];
+const TEAM_CONTEXT_STORAGE_KEY = "techcup.teamContext";
 
-const createTeamPerformance = (roleInTeam: RoleType): TeamPerformance => {
-  const members: TeamMemberStats[] = [
-    {
-      id: 1,
-      name: roleInTeam === "capitan" ? "Tú" : "Carlos Méndez",
-      role: "Capitán",
-      goals: 4,
-      yellowCards: 1,
-      redCards: 0,
-      corners: 6,
-      fouls: 3,
-    },
-    {
-      id: 2,
-      name: roleInTeam === "jugador" ? "Tú" : "Laura Suárez",
-      role: "Jugador",
-      goals: 3,
-      yellowCards: 2,
-      redCards: 0,
-      corners: 4,
-      fouls: 5,
-    },
-    { id: 3, name: "Andrés Pardo", role: "Jugador", goals: 2, yellowCards: 0, redCards: 0, corners: 3, fouls: 2 },
-    { id: 4, name: "Sofía Rincón", role: "Jugador", goals: 1, yellowCards: 1, redCards: 0, corners: 5, fouls: 4 },
-    { id: 5, name: "Miguel Rojas", role: "Jugador", goals: 2, yellowCards: 1, redCards: 1, corners: 2, fouls: 6 },
-  ];
+interface StoredTeamContext {
+  roleInTeam?: RoleType;
+  teamStatus?: TeamStatus;
+  teamName?: string;
+  teamMembers?: TeamRosterMember[];
+  joinedAt?: string | null;
+  teamSchedule?: TeamScheduleItem[];
+}
+
+const createTeamSchedule = (_teamName: string): TeamScheduleItem[] => [];
+
+const createTeamPerformance = (roster: TeamRosterMember[]): TeamPerformance => {
+  const members: TeamMemberStats[] = roster.map((member) => ({
+    id: member.id,
+    name: member.name,
+    role: member.role,
+    goals: 0,
+    yellowCards: 0,
+    redCards: 0,
+    corners: 0,
+    fouls: 0,
+  }));
 
   return {
     members,
-    totalPoints: 12,
+    totalPoints: 0,
   };
 };
 
@@ -1294,11 +1289,17 @@ function TeamScoreModal({
 export function Dashboard() {
   const navigate = useNavigate();
 
+  const loadStoredTeamContext = () => {
+    return readUICache<StoredTeamContext | null>(TEAM_CONTEXT_STORAGE_KEY, null);
+  };
+
+  const storedTeamContext = loadStoredTeamContext();
+
   // Logout
   const [showLogout, setShowLogout] = useState(false);
 
   // Notifications
-  const [notifs, setNotifs] = useState<Notification[]>(initialNotifs);
+  const [notifs, setNotifs] = useState<Notification[]>(() => readUICache<Notification[]>(TEAM_NOTIFS_STORAGE_KEY, initialNotifs));
   const [notifOpen, setNotifOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
   const [toast, setToast] = useState<{ msg: string; color: string } | null>(null);
@@ -1306,17 +1307,32 @@ export function Dashboard() {
 
   // Inscription
   const [showInscription, setShowInscription] = useState(false);
-  const [roleInTeam, setRoleInTeam] = useState<RoleType | null>(null);
-  const [teamName, setTeamName] = useState("");
-  const [joinedAt, setJoinedAt] = useState<string | null>(null);
-  const [teamSchedule, setTeamSchedule] = useState<TeamScheduleItem[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamRosterMember[]>([]);
-  const [dateFilter, setDateFilter] = useState<"all" | "week" | "month">("all");
+  const [roleInTeam, setRoleInTeam] = useState<RoleType | null>(storedTeamContext?.roleInTeam ?? null);
+  const [teamStatus, setTeamStatus] = useState<TeamStatus>(storedTeamContext?.teamStatus ?? "draft");
+  const [teamName, setTeamName] = useState(storedTeamContext?.teamName ?? "");
+  const [joinedAt, setJoinedAt] = useState<string | null>(storedTeamContext?.joinedAt ?? null);
+  const [teamSchedule, setTeamSchedule] = useState<TeamScheduleItem[]>(storedTeamContext?.teamSchedule ?? []);
+  const [teamMembers, setTeamMembers] = useState<TeamRosterMember[]>(storedTeamContext?.teamMembers ?? []);
   const [showTeamScore, setShowTeamScore] = useState(false);
 
   const isRegistered = Boolean(roleInTeam && teamName);
   const hasUploadedPayment = notifs.some((n) => n.type === "payment" && n.status === "uploaded");
-  const teamPerformance = roleInTeam ? createTeamPerformance(roleInTeam) : null;
+  const teamPerformance = roleInTeam && teamMembers.length > 0 ? createTeamPerformance(teamMembers) : null;
+
+  const persistTeamContext = (nextContext: StoredTeamContext) => {
+    writeUICache(TEAM_CONTEXT_STORAGE_KEY, nextContext);
+  };
+
+  useEffect(() => {
+    persistTeamContext({
+      roleInTeam: roleInTeam ?? undefined,
+      teamStatus,
+      teamName,
+      teamMembers,
+      joinedAt,
+      teamSchedule,
+    });
+  }, [roleInTeam, teamStatus, teamName, teamMembers, joinedAt, teamSchedule]);
 
   const ensurePaymentNotification = () => {
     setNotifs((prev) => {
@@ -1337,16 +1353,21 @@ export function Dashboard() {
     });
   };
 
-  const filteredSchedule = teamSchedule.filter((item) => {
-    if (dateFilter === "all") return true;
-    const day = new Date(item.date);
-    const now = new Date("2026-03-15");
-    const diffDays = Math.ceil((day.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (dateFilter === "week") return diffDays <= 7;
-    return diffDays <= 31;
-  });
-
   const unreadCount = notifs.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    writeUICache(TEAM_NOTIFS_STORAGE_KEY, notifs);
+  }, [notifs]);
+
+  useEffect(() => {
+    if (!isRegistered) return;
+    if (teamStatus !== "pending-payment") return;
+
+    const hasPaymentNotif = notifs.some((n) => n.type === "payment");
+    if (!hasPaymentNotif) {
+      ensurePaymentNotification();
+    }
+  }, [isRegistered, teamStatus, notifs]);
 
   // Close panel on outside click
   useEffect(() => {
@@ -1374,6 +1395,8 @@ export function Dashboard() {
   const handleLogout = () => {
     setShowLogout(false);
     sessionStorage.removeItem("userContext");
+    removeUICache(TEAM_CONTEXT_STORAGE_KEY);
+    removeUICache(TEAM_NOTIFS_STORAGE_KEY);
     navigate("/login");
   };
 
@@ -1510,6 +1533,7 @@ export function Dashboard() {
                   n.id === selectedNotif!.id ? { ...n, status: "uploaded", read: true } : n
                 )
               );
+              setTeamStatus("in-review");
               setSelectedNotif(null);
               showToast("¡Comprobante enviado correctamente!", P.success);
             }}
@@ -1524,6 +1548,7 @@ export function Dashboard() {
             onClose={() => setShowInscription(false)}
             onSuccess={({ teamName: createdTeamName, members }) => {
               setRoleInTeam("capitan");
+              setTeamStatus("pending-payment");
               setTeamName(createdTeamName);
               setTeamMembers(members);
               setJoinedAt("2026-03-15");
@@ -1766,7 +1791,7 @@ export function Dashboard() {
                     Rol: {roleInTeam === "capitan" ? "Capitán" : "Jugador"} · Inscrito: {joinedAt}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center">
                   <span
                     className="text-xs px-2.5 py-1 rounded-full"
                     style={{
@@ -1777,85 +1802,52 @@ export function Dashboard() {
                   >
                     {hasUploadedPayment ? "Pago enviado" : "Pago pendiente"}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowTeamScore(true)}
-                    className="text-xs px-3 py-1.5 rounded-lg border"
-                    style={{
-                      backgroundColor: "white",
-                      borderColor: `${P.info}45`,
-                      color: P.info,
-                      fontWeight: 800,
-                      boxShadow: `0 2px 10px ${P.info}1A`,
-                    }}
-                  >
-                    Puntuación
-                  </button>
                 </div>
               </div>
 
-              <div className="flex gap-2 mb-4">
-                {[
-                  { id: "all", label: "Todas" },
-                  { id: "week", label: "7 días" },
-                  { id: "month", label: "30 días" },
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setDateFilter(option.id as "all" | "week" | "month")}
-                    className="px-3 py-1.5 rounded-lg text-xs"
-                    style={{
-                      backgroundColor: dateFilter === option.id ? `${P.info}16` : "#F4F4F5",
-                      color: dateFilter === option.id ? P.info : P.default,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate("/dashboard/team-setup", {
+                      state: {
+                        teamName,
+                        teamMembers,
+                        teamSchedule,
+                        roleInTeam,
+                        teamStatus: teamStatus === "draft" ? "pending-payment" : teamStatus,
+                      },
+                    })
+                  }
+                  className="text-sm px-6 py-3 rounded-2xl border transition-all duration-200"
+                  style={{
+                    backgroundColor: "white",
+                    borderColor: `${P.secondary}45`,
+                    color: P.secondary,
+                    fontWeight: 800,
+                    minWidth: "190px",
+                    boxShadow: `0 8px 22px ${P.secondary}26`,
+                  }}
+                >
+                  {teamStatus === "pending-payment" ? "Configurar equipo" : "Ver configuración"}
+                </button>
 
-              <div className="space-y-2">
-                {filteredSchedule.length === 0 ? (
-                  <p style={{ fontSize: "0.78rem", color: P.default, fontWeight: 500 }}>
-                    No hay partidos programados para el filtro seleccionado.
-                  </p>
-                ) : (
-                  filteredSchedule.map((item) => (
-                    <div
-                      key={item.id}
-                      className="border rounded-xl px-3 py-2"
-                      style={{ borderColor: "rgba(0,0,0,0.08)" }}
-                    >
-                      <p style={{ fontSize: "0.77rem", fontWeight: 700, color: P.textPrimary }}>{item.opponent}</p>
-                      <p style={{ fontSize: "0.72rem", color: P.default, fontWeight: 500 }}>
-                        {item.label} · {item.date} · {item.hour} · {item.venue}
-                      </p>
-                    </div>
-                  ))
-                )}
+                <button
+                  type="button"
+                  onClick={() => setShowTeamScore(true)}
+                  className="text-sm px-6 py-3 rounded-2xl border transition-all duration-200"
+                  style={{
+                    backgroundColor: "white",
+                    borderColor: `${P.info}45`,
+                    color: P.info,
+                    fontWeight: 800,
+                    minWidth: "170px",
+                    boxShadow: `0 8px 22px ${P.info}26`,
+                  }}
+                >
+                  Puntuación
+                </button>
               </div>
-
-              {teamMembers.length > 0 && (
-                <div className="mt-4">
-                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: P.default, marginBottom: 8 }}>
-                    Plantilla ({teamMembers.length} integrantes)
-                  </p>
-                  <div className="space-y-2">
-                    {teamMembers.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between px-3 py-2 rounded-xl border" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-                        <div>
-                          <p style={{ fontSize: "0.78rem", fontWeight: 700, color: P.textPrimary }}>{member.name}</p>
-                          <p style={{ fontSize: "0.7rem", fontWeight: 600, color: P.default }}>{member.email}</p>
-                        </div>
-                        <p style={{ fontSize: "0.72rem", fontWeight: 700, color: member.role === "Capitán" ? P.secondary : P.info }}>
-                          {member.role} · #{member.jerseyNumber}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </>
           )}
         </motion.div>

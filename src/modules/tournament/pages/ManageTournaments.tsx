@@ -4,8 +4,9 @@
  */
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useNavigate } from "react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import logoTechcup from "@/assets/logo.png";
+import { readUICache, writeUICache } from "@/core/utils/uiCache";
 import {
   User,
   LogOut,
@@ -59,51 +60,19 @@ interface Tournament {
 const mockTournaments: Tournament[] = [
   {
     id: 1,
-    name: "TECHCUP 2026",
+    name: "TECHCUP 2026-1",
     status: "active",
     startDate: "2026-03-01",
     endDate: "2026-03-30",
-    teams: 16,
-    matches: 32,
-    eliminatedTeams: 4,
-    totalRevenue: 24000000,
+    teams: 0,
+    matches: 0,
+    eliminatedTeams: 0,
+    totalRevenue: 0,
     maxTeams: 16,
     playersPerTeam: 11,
     schedules: ["8:00 AM - 10:00 AM", "10:00 AM - 12:00 PM", "2:00 PM - 4:00 PM"],
     allowedDecanaturas: ["Ingeniería de Sistemas", "Ingeniería de Inteligencia Artificial"],
     costPerTeam: 50000,
-  },
-  {
-    id: 2,
-    name: "TECHCUP 2025",
-    status: "completed",
-    startDate: "2025-03-01",
-    endDate: "2025-03-28",
-    teams: 12,
-    matches: 24,
-    eliminatedTeams: 12,
-    totalRevenue: 18000000,
-    maxTeams: 12,
-    playersPerTeam: 11,
-    schedules: ["10:00 AM - 12:00 PM", "2:00 PM - 4:00 PM"],
-    allowedDecanaturas: ["Ingeniería de Sistemas", "Ingeniería Estadística"],
-    costPerTeam: 45000,
-  },
-  {
-    id: 3,
-    name: "TECHCUP 2027",
-    status: "upcoming",
-    startDate: "2027-03-01",
-    endDate: "2027-03-30",
-    teams: 0,
-    matches: 0,
-    eliminatedTeams: 0,
-    totalRevenue: 0,
-    maxTeams: 20,
-    playersPerTeam: 11,
-    schedules: [],
-    allowedDecanaturas: [],
-    costPerTeam: 60000,
   },
 ];
 
@@ -130,11 +99,15 @@ const horariosOptions = [
 export function ManageTournaments() {
   const navigate = useNavigate();
   const [showLogout, setShowLogout] = useState(false);
-  const [tournaments, setTournaments] = useState<Tournament[]>(mockTournaments);
+  const [tournaments, setTournaments] = useState<Tournament[]>(() => readUICache<Tournament[]>("techcup.ui.tournaments", mockTournaments));
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState<Tournament | null>(null);
   const [originalEditForm, setOriginalEditForm] = useState<Tournament | null>(null);
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    writeUICache("techcup.ui.tournaments", tournaments);
+  }, [tournaments]);
 
   const getStatusColor = (status: Tournament["status"]) => {
     switch (status) {

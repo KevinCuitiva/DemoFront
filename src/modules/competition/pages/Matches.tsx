@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router";
 import { useState } from "react";
 import { ArrowLeft, Clock, Swords, MapPin, ChevronDown } from "lucide-react";
+import { readUICache } from "@/core/utils/uiCache";
 
 const P = {
   primary: "#B81C1C",
@@ -36,68 +37,7 @@ interface Match {
   stats: MatchStats | null;
 }
 
-const matches: Match[] = [
-  {
-    id: 1,
-    team1: "Equipo Alpha",
-    team2: "Equipo Beta",
-    time: "10:00",
-    venue: "Sala Principal A",
-    status: "En curso",
-    statusColor: P.success,
-    score1: 2,
-    score2: 1,
-    stats: { yellowCards: [2, 3], redCards: [1, 0], corners: [5, 3], fouls: [8, 11] },
-  },
-  {
-    id: 2,
-    team1: "Equipo Delta",
-    team2: "Equipo Gamma",
-    time: "12:30",
-    venue: "Sala Principal B",
-    status: "Próximo",
-    statusColor: P.info,
-    score1: null,
-    score2: null,
-    stats: null,
-  },
-  {
-    id: 3,
-    team1: "Equipo Sigma",
-    team2: "Equipo Omega",
-    time: "15:00",
-    venue: "Arena Central",
-    status: "Próximo",
-    statusColor: P.info,
-    score1: null,
-    score2: null,
-    stats: null,
-  },
-  {
-    id: 4,
-    team1: "Equipo Nova",
-    team2: "Equipo Zeta",
-    time: "17:30",
-    venue: "Sala Sur",
-    status: "Próximo",
-    statusColor: P.info,
-    score1: null,
-    score2: null,
-    stats: null,
-  },
-  {
-    id: 5,
-    team1: "Equipo Apex",
-    team2: "Equipo Vega",
-    time: "08:00",
-    venue: "Sala Norte",
-    status: "Finalizado",
-    statusColor: P.default,
-    score1: 3,
-    score2: 0,
-    stats: { yellowCards: [1, 4], redCards: [0, 1], corners: [7, 2], fouls: [6, 14] },
-  },
-];
+const matches = readUICache<Match[]>("techcup.ui.matches", []);
 
 function StatRow({ label, val1, val2, statColor }: { label: string; val1: number; val2: number; statColor: string }) {
   const total = val1 + val2 || 1;
@@ -406,9 +346,17 @@ export function Matches() {
 
         {/* ── Match cards ── */}
         <div className="space-y-4">
-          {sorted.map((match, index) => (
-            <MatchCard key={match.id} match={match} index={index} />
-          ))}
+          {sorted.length === 0 ? (
+            <div className="bg-white rounded-[20px] p-8 text-center" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+              <Swords className="w-10 h-10 mx-auto mb-3" style={{ color: P.default, opacity: 0.35 }} />
+              <p style={{ fontWeight: 700, color: P.textPrimary }}>No hay partidos programados</p>
+              <p className="mt-1" style={{ fontSize: "0.82rem", color: P.default, fontWeight: 500 }}>
+                Cuando el backend entregue información, los partidos aparecerán aquí.
+              </p>
+            </div>
+          ) : (
+            sorted.map((match, index) => <MatchCard key={match.id} match={match} index={index} />)
+          )}
         </div>
 
       </main>

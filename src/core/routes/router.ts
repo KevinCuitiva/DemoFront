@@ -12,6 +12,7 @@ import { PaymentReport } from "@/modules/tournament/pages/PaymentReport";
 import { ManageTournaments } from "@/modules/tournament/pages/ManageTournaments";
 import { TournamentDetail } from "@/modules/tournament/pages/TournamentDetail";
 import { MatchDetail } from "@/modules/teams/pages/MatchDetail";
+import { TeamPrePaymentSetup } from "@/modules/teams/pages/TeamPrePaymentSetup";
 import { Events } from "@/modules/competition/pages/Events";
 import { Profile } from "@/modules/users/pages/Profile";
 import { Login } from "@/modules/auth/pages/Login";
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
       { path: "dashboard", Component: Dashboard },
       { path: "dashboard-arbitro", Component: ArbitroDashboard },
       { path: "dashboard-arbitro/partido/:id", Component: MatchDetail },
+      { path: "dashboard/team-setup", Component: TeamPrePaymentSetup },
       { path: "dashboard-organizer", Component: OrganizerDashboard },
       { path: "organizer/create-tournament", Component: CreateTournament },
       { path: "organizer/payment-report", Component: PaymentReport },

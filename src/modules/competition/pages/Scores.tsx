@@ -5,6 +5,7 @@
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { readUICache } from "@/core/utils/uiCache";
 
 const P = {
   primary: "#B81C1C",
@@ -16,16 +17,10 @@ const P = {
   bg: "#F2F2F7",
 };
 
-const rankings = [
-  { pos: 1, team: "Equipo Alpha", pts: 24, pg: 8, pe: 0, pp: 1, gf: 23, gc: 7, trend: "up" },
-  { pos: 2, team: "Equipo Sigma", pts: 21, pg: 7, pe: 0, pp: 2, gf: 19, gc: 10, trend: "up" },
-  { pos: 3, team: "Equipo Nova", pts: 18, pg: 6, pe: 0, pp: 3, gf: 16, gc: 11, trend: "down" },
-  { pos: 4, team: "Equipo Delta", pts: 15, pg: 5, pe: 0, pp: 4, gf: 14, gc: 13, trend: "same" },
-  { pos: 5, team: "Equipo Omega", pts: 12, pg: 4, pe: 0, pp: 5, gf: 11, gc: 15, trend: "up" },
-  { pos: 6, team: "Equipo Zeta", pts: 9, pg: 3, pe: 0, pp: 6, gf: 9, gc: 17, trend: "down" },
-  { pos: 7, team: "Equipo Vega", pts: 6, pg: 2, pe: 0, pp: 7, gf: 7, gc: 20, trend: "same" },
-  { pos: 8, team: "Equipo Beta", pts: 3, pg: 1, pe: 0, pp: 8, gf: 5, gc: 21, trend: "down" },
-];
+const rankings = readUICache<Array<{ pos: number; team: string; pts: number; pg: number; pe: number; pp: number; gf: number; gc: number; trend: string }>>(
+  "techcup.ui.scores",
+  []
+);
 
 const posConfig: Record<number, { bg: string; text: string; label: string; border: string }> = {
   1: { bg: "#C4841D10", text: "#C4841D", label: "Oro", border: "#C4841D28" },
@@ -116,35 +111,45 @@ export function Scores() {
         </motion.div>
 
         <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
-          {rankings.slice(0, 3).map((team) => {
-            const cfg = posConfig[team.pos];
-            return (
-              <motion.div
-                key={team.pos}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.18 + team.pos * 0.07, duration: 0.4, ease: "easeOut" }}
-                whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(0,0,0,0.10)" }}
-                className="flex flex-col items-center text-center p-4 sm:p-5 rounded-[20px] bg-white transition-all duration-300"
-                style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)", border: `1.5px solid ${cfg.border}` }}
-              >
-                <div
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center mb-3"
-                  style={{ backgroundColor: cfg.bg }}
+          {rankings.length === 0 ? (
+            <div className="col-span-3 bg-white rounded-[20px] p-8 text-center" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+              <Trophy className="w-10 h-10 mx-auto mb-3" style={{ color: P.default, opacity: 0.35 }} />
+              <p style={{ fontWeight: 700, color: P.textPrimary }}>Sin posiciones registradas</p>
+              <p className="mt-1" style={{ fontSize: "0.82rem", color: P.default, fontWeight: 500 }}>
+                Cuando el backend publique la tabla, aparecerá aquí.
+              </p>
+            </div>
+          ) : (
+            rankings.slice(0, 3).map((team) => {
+              const cfg = posConfig[team.pos];
+              return (
+                <motion.div
+                  key={team.pos}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.18 + team.pos * 0.07, duration: 0.4, ease: "easeOut" }}
+                  whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(0,0,0,0.10)" }}
+                  className="flex flex-col items-center text-center p-4 sm:p-5 rounded-[20px] bg-white transition-all duration-300"
+                  style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)", border: `1.5px solid ${cfg.border}` }}
                 >
-                  <Trophy style={{ width: 20, height: 20, color: cfg.text }} />
-                </div>
-                <p style={{ fontSize: "0.6rem", fontWeight: 700, color: cfg.text, textTransform: "uppercase", letterSpacing: "0.12em" }}>
-                  {cfg.label}
-                </p>
-                <p className="mt-1" style={{ fontSize: "0.82rem", fontWeight: 700, color: P.textPrimary }}>{team.team}</p>
-                <p className="mt-1.5" style={{ fontSize: "1.5rem", fontWeight: 800, color: cfg.text, letterSpacing: "-0.02em" }}>
-                  {team.pts}
-                  <span style={{ fontSize: "0.72rem", fontWeight: 500, color: P.default, marginLeft: 3 }}>pts</span>
-                </p>
-              </motion.div>
-            );
-          })}
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center mb-3"
+                    style={{ backgroundColor: cfg.bg }}
+                  >
+                    <Trophy style={{ width: 20, height: 20, color: cfg.text }} />
+                  </div>
+                  <p style={{ fontSize: "0.6rem", fontWeight: 700, color: cfg.text, textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                    {cfg.label}
+                  </p>
+                  <p className="mt-1" style={{ fontSize: "0.82rem", fontWeight: 700, color: P.textPrimary }}>{team.team}</p>
+                  <p className="mt-1.5" style={{ fontSize: "1.5rem", fontWeight: 800, color: cfg.text, letterSpacing: "-0.02em" }}>
+                    {team.pts}
+                    <span style={{ fontSize: "0.72rem", fontWeight: 500, color: P.default, marginLeft: 3 }}>pts</span>
+                  </p>
+                </motion.div>
+              );
+            })
+          )}
         </div>
 
         {/* ── Full table ── */}
@@ -180,7 +185,15 @@ export function Scores() {
           </div>
 
           {/* Rows */}
-          {rankings.map((row, index) => {
+          {rankings.length === 0 ? (
+            <div className="py-12 text-center">
+              <Trophy className="w-10 h-10 mx-auto mb-3" style={{ color: P.default, opacity: 0.35 }} />
+              <p style={{ color: P.textPrimary, fontWeight: 700 }}>No hay posiciones publicadas</p>
+              <p className="mt-1" style={{ color: P.default, fontWeight: 500, fontSize: "0.82rem" }}>
+                Los datos de clasificación se mostrarán cuando el backend esté conectado.
+              </p>
+            </div>
+          ) : rankings.map((row, index) => {
             const cfg = posConfig[row.pos];
             return (
               <motion.div
